@@ -153,6 +153,7 @@ where
 #[cfg(test)]
 mod test {
     use crate::*;
+    use std::rc::Rc;
 
     #[test]
     fn array_in_array() {
@@ -162,5 +163,11 @@ mod test {
             .into_iter()
             .collect::<IArray<IArray<u32>>>();
         assert_eq!(array_of_array, [[1, 2, 3], [4, 5, 6]]);
+    }
+
+    #[test]
+    fn array_holding_rc_items() {
+        struct Item;
+        let _array = [Rc::new(Item)].into_iter().collect::<IArray<Rc<Item>>>();
     }
 }
