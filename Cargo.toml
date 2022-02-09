@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 web-sys = "0.3.56"
-yew = "0.19.3"
+yew = { path = "/home/cecile/repos/yew/packages/yew" }
 
 [dev-dependencies]
 wasm-bindgen = "0.2.79"

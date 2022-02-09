@@ -1,13 +1,13 @@
 use std::rc::Rc;
 use yew::html::{ImplicitClone, IntoPropValue};
 
-#[derive(PartialEq)]
-pub enum IArray<T: 'static> {
+#[derive(Debug, PartialEq)]
+pub enum IArray<T: ImplicitClone + 'static> {
     Static(&'static [T]),
     Rc(Rc<[T]>),
 }
 
-impl<T: 'static> Clone for IArray<T> {
+impl<T: ImplicitClone + 'static> Clone for IArray<T> {
     fn clone(&self) -> Self {
         match self {
             Self::Static(a) => Self::Static(a),
@@ -16,52 +16,52 @@ impl<T: 'static> Clone for IArray<T> {
     }
 }
 
-impl<T: 'static> Default for IArray<T> {
+impl<T: ImplicitClone + 'static> Default for IArray<T> {
     fn default() -> Self {
         Self::Static(&[])
     }
 }
 
-impl<T: 'static> FromIterator<T> for IArray<T> {
+impl<T: ImplicitClone + 'static> FromIterator<T> for IArray<T> {
     fn from_iter<I: IntoIterator<Item = T>>(it: I) -> Self {
         let vec = it.into_iter().collect::<Vec<T>>();
         Self::Rc(Rc::from(vec))
     }
 }
 
-impl<T: 'static> IntoPropValue<IArray<T>> for &'static [T] {
+impl<T: ImplicitClone + 'static> IntoPropValue<IArray<T>> for &'static [T] {
     fn into_prop_value(self) -> IArray<T> {
         IArray::from(self)
     }
 }
 
-impl<T: 'static> IntoPropValue<IArray<T>> for Vec<T> {
+impl<T: ImplicitClone + 'static> IntoPropValue<IArray<T>> for Vec<T> {
     fn into_prop_value(self) -> IArray<T> {
         IArray::from(self)
     }
 }
 
-impl<T: 'static> ImplicitClone for IArray<T> {}
+impl<T: ImplicitClone + 'static> ImplicitClone for IArray<T> {}
 
-impl<T: 'static> From<&'static [T]> for IArray<T> {
+impl<T: ImplicitClone + 'static> From<&'static [T]> for IArray<T> {
     fn from(a: &'static [T]) -> IArray<T> {
         IArray::Static(a)
     }
 }
 
-impl<T: 'static> From<Vec<T>> for IArray<T> {
+impl<T: ImplicitClone + 'static> From<Vec<T>> for IArray<T> {
     fn from(a: Vec<T>) -> IArray<T> {
         IArray::Rc(Rc::from(a))
     }
 }
 
-impl<T: 'static> From<Rc<[T]>> for IArray<T> {
+impl<T: ImplicitClone + 'static> From<Rc<[T]>> for IArray<T> {
     fn from(a: Rc<[T]>) -> IArray<T> {
         IArray::Rc(a)
     }
 }
 
-impl<T: 'static> IArray<T> {
+impl<T: ImplicitClone + 'static> IArray<T> {
     pub fn iter(&self) -> impl Iterator<Item = &T> {
         match self {
             Self::Static(a) => a.iter(),
@@ -89,9 +89,7 @@ impl<T: 'static> IArray<T> {
             Self::Rc(a) => a.get(index),
         }
     }
-}
 
-impl<T: Clone + 'static> IArray<T> {
     pub fn into_iter(self) -> IArrayIntoIter<T> {
         IArrayIntoIter {
             array: self,
@@ -100,17 +98,80 @@ impl<T: Clone + 'static> IArray<T> {
     }
 }
 
-pub struct IArrayIntoIter<T: Clone + 'static> {
+pub struct IArrayIntoIter<T: ImplicitClone + 'static> {
     array: IArray<T>,
     index: usize,
 }
 
-impl<T: Clone + 'static> Iterator for IArrayIntoIter<T> {
+impl<T: ImplicitClone + 'static> Iterator for IArrayIntoIter<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
         let item = self.array.get(self.index).map(|x| x.clone());
         self.index += 1;
         item
+    }
+}
+
+impl<'a, T, U, const N: usize> PartialEq<&'a [U; N]> for IArray<T>
+where
+    T: PartialEq<U> + ImplicitClone,
+{
+    fn eq(&self, other: &&[U; N]) -> bool {
+        match self {
+            Self::Static(a) => a.eq(other),
+            Self::Rc(a) => a.eq(*other),
+        }
+    }
+}
+
+impl<T, U, const N: usize> PartialEq<[U; N]> for IArray<T>
+where
+    T: PartialEq<U> + ImplicitClone,
+{
+    fn eq(&self, other: &[U; N]) -> bool {
+        match self {
+            Self::Static(a) => a.eq(other),
+            Self::Rc(a) => a.eq(other),
+        }
+    }
+}
+
+impl<T, U> PartialEq<[U]> for IArray<T>
+where
+    T: PartialEq<U> + ImplicitClone,
+{
+    fn eq(&self, other: &[U]) -> bool {
+        match self {
+            Self::Static(a) => a.eq(&other),
+            Self::Rc(a) => a.eq(other),
+        }
+    }
+}
+
+impl<'a, T, U> PartialEq<&'a [U]> for IArray<T>
+where
+    T: PartialEq<U> + ImplicitClone,
+{
+    fn eq(&self, other: &&[U]) -> bool {
+        match self {
+            Self::Static(a) => a.eq(other),
+            Self::Rc(a) => a.eq(*other),
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::*;
+
+    #[test]
+    fn array_in_array() {
+        let array_1 = [1, 2, 3].into_iter().collect::<IArray<u32>>();
+        let array_2 = [4, 5, 6].into_iter().collect::<IArray<u32>>();
+        let array_of_array = [array_1, array_2]
+            .into_iter()
+            .collect::<IArray<IArray<u32>>>();
+        assert_eq!(array_of_array, [[1, 2, 3], [4, 5, 6]]);
     }
 }
