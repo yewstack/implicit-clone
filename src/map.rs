@@ -104,35 +104,35 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         }
     }
 
-    pub fn get<Q: ?Sized>(&self, key: &Q) -> Option<&V>
+    pub fn get<Q: ?Sized>(&self, key: &Q) -> Option<V>
     where
         K: Borrow<Q>,
         Q: Hash + Eq,
     {
         match self {
-            Self::Static(a) => a.get(key),
-            Self::Rc(a) => a.get(key),
+            Self::Static(a) => a.get(key).cloned(),
+            Self::Rc(a) => a.get(key).cloned(),
             Self::Empty => None,
         }
     }
 }
 
 impl<V: PartialEq + ImplicitClone + 'static> IMap<IString, V> {
-    pub fn get_static_str(&self, key: &'static str) -> Option<&V> {
+    pub fn get_static_str(&self, key: &'static str) -> Option<V> {
         let key = IString::from(key);
         match self {
-            Self::Static(a) => a.get(&key),
-            Self::Rc(a) => a.get(&key),
+            Self::Static(a) => a.get(&key).cloned(),
+            Self::Rc(a) => a.get(&key).cloned(),
             Self::Empty => None,
         }
     }
 }
 
 impl<V: PartialEq + ImplicitClone + 'static> IMap<&'static str, V> {
-    pub fn get_static_str(&self, key: &'static str) -> Option<&V> {
+    pub fn get_static_str(&self, key: &'static str) -> Option<V> {
         match self {
-            Self::Static(a) => a.get(key),
-            Self::Rc(a) => a.get(key),
+            Self::Static(a) => a.get(key).cloned(),
+            Self::Rc(a) => a.get(key).cloned(),
             Self::Empty => None,
         }
     }
@@ -177,8 +177,8 @@ mod test {
         imap_deconstruct!(
             let { foo, bar, baz } = my_imap
         );
-        assert_eq!(foo, Some(&1));
-        assert_eq!(bar, Some(&2));
+        assert_eq!(foo, Some(1));
+        assert_eq!(bar, Some(2));
         assert_eq!(baz, None);
     }
 
