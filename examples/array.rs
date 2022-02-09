@@ -58,7 +58,6 @@ impl Component for App {
                 self.values = self
                     .values
                     .iter()
-                    .cloned()
                     .chain(std::iter::once(IString::from(name)))
                     .collect();
                 true

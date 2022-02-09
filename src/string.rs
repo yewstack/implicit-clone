@@ -3,7 +3,7 @@ use std::rc::Rc;
 use yew::html::{ImplicitClone, IntoPropValue};
 use yew::virtual_dom::AttrValue;
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum IString {
     Static(&'static str),
     Rc(Rc<str>),

@@ -58,7 +58,6 @@ impl Component for App {
                 self.values = self
                     .values
                     .iter()
-                    .map(|(i, s)| (*i, s.clone()))
                     .chain(std::iter::once((
                         self.values.len() as u32,
                         IString::from(name),

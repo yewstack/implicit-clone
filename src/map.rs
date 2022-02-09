@@ -1,7 +1,7 @@
 use crate::*;
+use indexmap::map::Iter as MapIter;
+use indexmap::IndexMap as Map;
 use std::borrow::Borrow;
-use std::collections::hash_map::Iter as MapIter;
-use std::collections::HashMap as Map;
 use std::hash::Hash;
 use std::rc::Rc;
 use yew::html::{ImplicitClone, IntoPropValue};
@@ -146,11 +146,11 @@ pub enum IMapIter<'a, K, V> {
 impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static> Iterator
     for IMapIter<'a, K, V>
 {
-    type Item = (&'a K, &'a V);
+    type Item = (K, V);
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
-            Self::Map(it) => it.next(),
+            Self::Map(it) => it.next().map(|(k, v)| (k.clone(), v.clone())),
             Self::Empty => None,
         }
     }
@@ -180,5 +180,42 @@ mod test {
         assert_eq!(foo, Some(&1));
         assert_eq!(bar, Some(&2));
         assert_eq!(baz, None);
+    }
+
+    #[test]
+    fn map_in_map() {
+        let map_1 = [
+            (IString::from("foo1"), 1),
+            (IString::from("bar1"), 2),
+            (IString::from("baz1"), 3),
+        ]
+        .into_iter()
+        .collect::<IMap<IString, u32>>();
+        let map_2 = [
+            (IString::from("foo2"), 4),
+            (IString::from("bar2"), 5),
+            (IString::from("baz2"), 6),
+        ]
+        .into_iter()
+        .collect::<IMap<IString, u32>>();
+        let map_of_map = [("map_1", map_1), ("map_2", map_2)]
+            .into_iter()
+            .collect::<IMap<&'static str, IMap<IString, u32>>>();
+        let flattened_vec = map_of_map
+            .iter()
+            .flat_map(|(_key, map)| map.iter().collect::<Vec<(_, _)>>())
+            .collect::<Vec<(_, _)>>();
+        // TODO allow PartialEq IString with &str
+        assert_eq!(
+            flattened_vec,
+            [
+                (IString::from("foo1"), 1),
+                (IString::from("bar1"), 2),
+                (IString::from("baz1"), 3),
+                (IString::from("foo2"), 4),
+                (IString::from("bar2"), 5),
+                (IString::from("baz2"), 6),
+            ]
+        );
     }
 }

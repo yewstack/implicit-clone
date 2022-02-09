@@ -62,10 +62,10 @@ impl<T: ImplicitClone + 'static> From<Rc<[T]>> for IArray<T> {
 }
 
 impl<T: ImplicitClone + 'static> IArray<T> {
-    pub fn iter(&self) -> impl Iterator<Item = &T> {
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = T> + 'a {
         match self {
-            Self::Static(a) => a.iter(),
-            Self::Rc(a) => a.iter(),
+            Self::Static(a) => a.iter().cloned(),
+            Self::Rc(a) => a.iter().cloned(),
         }
     }
 
@@ -88,28 +88,6 @@ impl<T: ImplicitClone + 'static> IArray<T> {
             Self::Static(a) => a.get(index),
             Self::Rc(a) => a.get(index),
         }
-    }
-
-    pub fn into_iter(self) -> IArrayIntoIter<T> {
-        IArrayIntoIter {
-            array: self,
-            index: 0,
-        }
-    }
-}
-
-pub struct IArrayIntoIter<T: ImplicitClone + 'static> {
-    array: IArray<T>,
-    index: usize,
-}
-
-impl<T: ImplicitClone + 'static> Iterator for IArrayIntoIter<T> {
-    type Item = T;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let item = self.array.get(self.index).map(|x| x.clone());
-        self.index += 1;
-        item
     }
 }
 
