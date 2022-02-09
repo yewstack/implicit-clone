@@ -174,9 +174,11 @@ impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 
 
 #[macro_export]
 macro_rules! imap_deconstruct {
-    (let { $($key:ident),+ $(,)? } = $map:expr) => {
+    ($(let { $($key:ident),+ $(,)? } = $map:expr;)*) => {
+        $(
         $(
             let $key = $map.get_static_str(stringify!($key));
+        )*
         )*
     };
 }
@@ -191,11 +193,13 @@ mod test {
             .into_iter()
             .collect::<IMap<IString, u32>>();
         imap_deconstruct!(
-            let { foo, bar, baz } = my_imap
+            let { foo, bar, baz } = my_imap;
+            let { foobarbaz } = my_imap;
         );
         assert_eq!(foo, Some(1));
         assert_eq!(bar, Some(2));
         assert_eq!(baz, None);
+        assert_eq!(foobarbaz, None);
     }
 
     #[test]
