@@ -1,10 +1,21 @@
+use std::fmt;
 use std::rc::Rc;
 use yew::html::{ImplicitClone, IntoPropValue};
 
-#[derive(Debug, PartialEq)]
+#[derive(PartialEq)]
 pub enum IArray<T: ImplicitClone + 'static> {
     Static(&'static [T]),
     Rc(Rc<[T]>),
+}
+
+// TODO add insta tests
+impl<T: fmt::Debug + ImplicitClone + 'static> fmt::Debug for IArray<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::Static(a) => a.fmt(f),
+            Self::Rc(a) => a.fmt(f),
+        }
+    }
 }
 
 impl<T: ImplicitClone + 'static> Clone for IArray<T> {

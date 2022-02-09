@@ -2,15 +2,31 @@ use crate::*;
 use indexmap::map::Iter as MapIter;
 use indexmap::IndexMap as Map;
 use std::borrow::Borrow;
+use std::fmt;
 use std::hash::Hash;
 use std::rc::Rc;
 use yew::html::{ImplicitClone, IntoPropValue};
 
-#[derive(Debug, PartialEq)]
+#[derive(PartialEq)]
 pub enum IMap<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static> {
     Static(&'static Map<K, V>),
     Rc(Rc<Map<K, V>>),
     Empty,
+}
+
+// TODO add insta tests
+impl<
+        K: fmt::Debug + Eq + Hash + ImplicitClone + 'static,
+        V: fmt::Debug + PartialEq + ImplicitClone + 'static,
+    > fmt::Debug for IMap<K, V>
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::Static(a) => a.fmt(f),
+            Self::Rc(a) => a.fmt(f),
+            Self::Empty => write!(f, "{{}}"),
+        }
+    }
 }
 
 impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static> Clone

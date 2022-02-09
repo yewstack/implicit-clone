@@ -31,7 +31,7 @@ impl IntoPropValue<IString> for AttrValue {
     fn into_prop_value(self) -> IString {
         match self {
             Self::Static(s) => IString::from(s),
-            Self::Owned(s) => IString::from(s),
+            //Self::Owned(s) => IString::from(s),
             Self::Rc(s) => IString::from(s),
         }
     }
