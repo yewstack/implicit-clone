@@ -74,3 +74,51 @@ impl From<Rc<str>> for IString {
         IString::Rc(s)
     }
 }
+
+impl PartialEq<str> for IString {
+    fn eq(&self, other: &str) -> bool {
+        match self {
+            Self::Static(s) => s.eq(&other),
+            Self::Rc(s) => (**s).eq(other),
+        }
+    }
+}
+
+impl PartialEq<&str> for IString {
+    fn eq(&self, other: &&str) -> bool {
+        match self {
+            Self::Static(s) => s.eq(other),
+            Self::Rc(s) => (**s).eq(*other),
+        }
+    }
+}
+
+impl PartialEq<String> for IString {
+    fn eq(&self, other: &String) -> bool {
+        match self {
+            Self::Static(s) => s.eq(&other),
+            Self::Rc(s) => (**s).eq(other),
+        }
+    }
+}
+
+impl PartialEq<&String> for IString {
+    fn eq(&self, other: &&String) -> bool {
+        match self {
+            Self::Static(s) => s.eq(other),
+            Self::Rc(s) => (**s).eq(*other),
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::*;
+
+    #[test]
+    fn string_cmp() {
+        assert_eq!(IString::from("foo"), "foo");
+        assert_eq!(IString::from("foo"), String::from("foo"));
+        assert_eq!(IString::from("foo"), &String::from("foo"));
+    }
+}
