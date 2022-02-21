@@ -9,7 +9,7 @@ use yew::html::{ImplicitClone, IntoPropValue};
 
 #[derive(PartialEq)]
 pub enum IMap<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static> {
-    Static(&'static Map<K, V>),
+    Static(&'static [(K, V)]),
     Rc(Rc<Map<K, V>>),
     Empty,
 }
@@ -59,7 +59,7 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
 }
 
 impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static>
-    IntoPropValue<IMap<K, V>> for &'static Map<K, V>
+    IntoPropValue<IMap<K, V>> for &'static [(K, V)]
 {
     fn into_prop_value(self) -> IMap<K, V> {
         IMap::from(self)
@@ -80,9 +80,9 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
 }
 
 impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static>
-    From<&'static Map<K, V>> for IMap<K, V>
+    From<&'static [(K, V)]> for IMap<K, V>
 {
-    fn from(a: &'static Map<K, V>) -> IMap<K, V> {
+    fn from(a: &'static [(K, V)]) -> IMap<K, V> {
         IMap::Static(a)
     }
 }
@@ -106,7 +106,7 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
 impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static> IMap<K, V> {
     pub fn iter(&self) -> IMapIter<K, V> {
         match self {
-            Self::Static(a) => IMapIter::Map(a.iter()),
+            Self::Static(a) => IMapIter::Slice(a.iter()),
             Self::Rc(a) => IMapIter::Map(a.iter()),
             Self::Empty => IMapIter::Empty,
         }
@@ -126,7 +126,10 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         Q: Hash + Eq,
     {
         match self {
-            Self::Static(a) => a.get(key).cloned(),
+            Self::Static(a) => a
+                .iter()
+                .find_map(|(k, v)| (k.borrow() == key).then(|| v))
+                .cloned(),
             Self::Rc(a) => a.get(key).cloned(),
             Self::Empty => None,
         }
@@ -137,7 +140,7 @@ impl<V: PartialEq + ImplicitClone + 'static> IMap<IString, V> {
     pub fn get_static_str(&self, key: &'static str) -> Option<V> {
         let key = IString::from(key);
         match self {
-            Self::Static(a) => a.get(&key).cloned(),
+            Self::Static(a) => a.iter().find_map(|(k, v)| (*k == key).then(|| v)).cloned(),
             Self::Rc(a) => a.get(&key).cloned(),
             Self::Empty => None,
         }
@@ -147,7 +150,7 @@ impl<V: PartialEq + ImplicitClone + 'static> IMap<IString, V> {
 impl<V: PartialEq + ImplicitClone + 'static> IMap<&'static str, V> {
     pub fn get_static_str(&self, key: &'static str) -> Option<V> {
         match self {
-            Self::Static(a) => a.get(key).cloned(),
+            Self::Static(a) => a.iter().find_map(|(k, v)| (*k == key).then(|| v)).cloned(),
             Self::Rc(a) => a.get(key).cloned(),
             Self::Empty => None,
         }
@@ -155,6 +158,7 @@ impl<V: PartialEq + ImplicitClone + 'static> IMap<&'static str, V> {
 }
 
 pub enum IMapIter<'a, K, V> {
+    Slice(std::slice::Iter<'a, (K, V)>),
     Map(MapIter<'a, K, V>),
     Empty,
 }
@@ -166,6 +170,7 @@ impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
+            Self::Slice(it) => it.next().map(|(k, v)| (k.clone(), v.clone())),
             Self::Map(it) => it.next().map(|(k, v)| (k.clone(), v.clone())),
             Self::Empty => None,
         }
@@ -237,5 +242,10 @@ mod test {
                 (IString::from("baz2"), 6),
             ]
         );
+    }
+
+    #[test]
+    fn static_map() {
+        const _MAP: IMap<&str, u32> = IMap::Static(&[("foo", 1)]);
     }
 }

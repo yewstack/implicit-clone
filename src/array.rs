@@ -170,4 +170,9 @@ mod test {
         struct Item;
         let _array = [Rc::new(Item)].into_iter().collect::<IArray<Rc<Item>>>();
     }
+
+    #[test]
+    fn static_array() {
+        const _ARRAY: IArray<u32> = IArray::Static(&[1, 2, 3]);
+    }
 }

@@ -121,4 +121,9 @@ mod test {
         assert_eq!(IString::from("foo"), String::from("foo"));
         assert_eq!(IString::from("foo"), &String::from("foo"));
     }
+
+    #[test]
+    fn static_string() {
+        const _STRING: IString = IString::Static("foo");
+    }
 }
