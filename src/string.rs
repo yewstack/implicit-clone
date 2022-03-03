@@ -79,6 +79,23 @@ impl PartialEq<&String> for IString {
     }
 }
 
+impl std::ops::Deref for IString {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Self::Static(s) => *s,
+            Self::Rc(s) => &*s,
+        }
+    }
+}
+
+impl AsRef<str> for IString {
+    fn as_ref(&self) -> &str {
+        &*self
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::*;
