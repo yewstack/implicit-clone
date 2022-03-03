@@ -7,9 +7,3 @@ edition = "2021"
 
 [dependencies]
 indexmap = "1.8.0"
-web-sys = "0.3.56"
-yew = { git = "https://github.com/yewstack/yew.git", rev = "fc067ab" }
-
-[dev-dependencies]
-wasm-bindgen = "0.2.79"
-xtask-wasm = { path = "/home/cecile/repos/xtask-wasm", features = ["run-example"] }

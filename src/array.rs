@@ -1,6 +1,6 @@
+use crate::ImplicitClone;
 use std::fmt;
 use std::rc::Rc;
-use yew::html::{ImplicitClone, IntoPropValue};
 
 #[derive(PartialEq)]
 pub enum IArray<T: ImplicitClone + 'static> {
@@ -37,18 +37,6 @@ impl<T: ImplicitClone + 'static> FromIterator<T> for IArray<T> {
     fn from_iter<I: IntoIterator<Item = T>>(it: I) -> Self {
         let vec = it.into_iter().collect::<Vec<T>>();
         Self::Rc(Rc::from(vec))
-    }
-}
-
-impl<T: ImplicitClone + 'static> IntoPropValue<IArray<T>> for &'static [T] {
-    fn into_prop_value(self) -> IArray<T> {
-        IArray::from(self)
-    }
-}
-
-impl<T: ImplicitClone + 'static> IntoPropValue<IArray<T>> for Vec<T> {
-    fn into_prop_value(self) -> IArray<T> {
-        IArray::from(self)
     }
 }
 

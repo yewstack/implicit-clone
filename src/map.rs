@@ -1,3 +1,4 @@
+use crate::ImplicitClone;
 use crate::*;
 use indexmap::map::Iter as MapIter;
 use indexmap::IndexMap as Map;
@@ -5,7 +6,6 @@ use std::borrow::Borrow;
 use std::fmt;
 use std::hash::Hash;
 use std::rc::Rc;
-use yew::html::{ImplicitClone, IntoPropValue};
 
 #[derive(PartialEq)]
 pub enum IMap<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static> {
@@ -55,22 +55,6 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
     fn from_iter<I: IntoIterator<Item = (K, V)>>(it: I) -> Self {
         let vec = it.into_iter().collect::<Map<K, V>>();
         Self::Rc(Rc::from(vec))
-    }
-}
-
-impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static>
-    IntoPropValue<IMap<K, V>> for &'static [(K, V)]
-{
-    fn into_prop_value(self) -> IMap<K, V> {
-        IMap::from(self)
-    }
-}
-
-impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static>
-    IntoPropValue<IMap<K, V>> for Map<K, V>
-{
-    fn into_prop_value(self) -> IMap<K, V> {
-        IMap::from(self)
     }
 }
 
