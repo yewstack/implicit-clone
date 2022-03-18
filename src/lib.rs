@@ -1,8 +1,10 @@
 mod array;
+#[cfg(feature = "map")]
 mod map;
 mod string;
 
 pub use array::*;
+#[cfg(feature = "map")]
 pub use map::*;
 use std::rc::Rc;
 pub use string::*;

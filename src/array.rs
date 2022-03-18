@@ -61,7 +61,7 @@ impl<T: ImplicitClone + 'static> From<Rc<[T]>> for IArray<T> {
 }
 
 impl<T: ImplicitClone + 'static> IArray<T> {
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = T> + 'a {
+    pub fn iter(&self) -> impl Iterator<Item = T> + '_ {
         match self {
             Self::Static(a) => a.iter().cloned(),
             Self::Rc(a) => a.iter().cloned(),
@@ -75,10 +75,17 @@ impl<T: ImplicitClone + 'static> IArray<T> {
         }
     }
 
+    pub fn is_empty(&self) -> bool {
+        match self {
+            Self::Static(a) => a.is_empty(),
+            Self::Rc(a) => a.is_empty(),
+        }
+    }
+
     pub fn as_slice(&self) -> &[T] {
         match self {
-            Self::Static(a) => &a,
-            Self::Rc(a) => &a,
+            Self::Static(a) => a,
+            Self::Rc(a) => a,
         }
     }
 

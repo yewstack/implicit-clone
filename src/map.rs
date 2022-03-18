@@ -104,6 +104,14 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         }
     }
 
+    pub fn is_empty(&self) -> bool {
+        match self {
+            Self::Static(a) => a.is_empty(),
+            Self::Rc(a) => a.is_empty(),
+            Self::Empty => true,
+        }
+    }
+
     pub fn get<Q: ?Sized>(&self, key: &Q) -> Option<V>
     where
         K: Borrow<Q>,
