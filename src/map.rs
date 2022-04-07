@@ -1,6 +1,8 @@
 use crate::ImplicitClone;
 use crate::*;
 use indexmap::map::Iter as MapIter;
+use indexmap::map::Keys as MapKeys;
+use indexmap::map::Values as MapValues;
 use indexmap::IndexMap as Map;
 use std::borrow::Borrow;
 use std::fmt;
@@ -88,6 +90,7 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
 }
 
 impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static> IMap<K, V> {
+    #[inline]
     pub fn iter(&self) -> IMapIter<K, V> {
         match self {
             Self::Static(a) => IMapIter::Slice(a.iter()),
@@ -96,6 +99,25 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         }
     }
 
+    #[inline]
+    pub fn keys(&self) -> IMapKeys<K, V> {
+        match self {
+            Self::Static(a) => IMapKeys::Slice(a.iter()),
+            Self::Rc(a) => IMapKeys::Map(a.keys()),
+            Self::Empty => IMapKeys::Empty,
+        }
+    }
+
+    #[inline]
+    pub fn values(&self) -> IMapValues<K, V> {
+        match self {
+            Self::Static(a) => IMapValues::Slice(a.iter()),
+            Self::Rc(a) => IMapValues::Map(a.values()),
+            Self::Empty => IMapValues::Empty,
+        }
+    }
+
+    #[inline]
     pub fn len(&self) -> usize {
         match self {
             Self::Static(a) => a.len(),
@@ -104,6 +126,7 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         }
     }
 
+    #[inline]
     pub fn is_empty(&self) -> bool {
         match self {
             Self::Static(a) => a.is_empty(),
@@ -112,6 +135,7 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         }
     }
 
+    #[inline]
     pub fn get<Q: ?Sized>(&self, key: &Q) -> Option<V>
     where
         K: Borrow<Q>,
@@ -126,9 +150,86 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
             Self::Empty => None,
         }
     }
+
+    #[inline]
+    pub fn get_key_value<Q: ?Sized>(&self, key: &Q) -> Option<(K, V)>
+    where
+        K: Borrow<Q>,
+        Q: Hash + Eq,
+    {
+        match self {
+            Self::Static(a) => a.iter().find(|(k, _)| k.borrow() == key).cloned(),
+            Self::Rc(a) => a.get_key_value(key).map(|(k, v)| (k.clone(), v.clone())),
+            Self::Empty => None,
+        }
+    }
+
+    #[inline]
+    pub fn get_full<Q: ?Sized>(&self, key: &Q) -> Option<(usize, K, V)>
+    where
+        K: Borrow<Q>,
+        Q: Hash + Eq,
+    {
+        match self {
+            Self::Static(a) => a
+                .iter()
+                .enumerate()
+                .find_map(|(i, (k, v))| (k.borrow() == key).then(|| (i, k.clone(), v.clone()))),
+            Self::Rc(a) => a.get_full(key).map(|(i, k, v)| (i, k.clone(), v.clone())),
+            Self::Empty => None,
+        }
+    }
+
+    #[inline]
+    pub fn get_index(&self, index: usize) -> Option<(K, V)> {
+        match self {
+            Self::Static(a) => a.get(index).cloned(),
+            Self::Rc(a) => a.get_index(index).map(|(k, v)| (k.clone(), v.clone())),
+            Self::Empty => None,
+        }
+    }
+
+    #[inline]
+    pub fn get_index_of<Q: ?Sized>(&self, key: &Q) -> Option<usize>
+    where
+        K: Borrow<Q>,
+        Q: Hash + Eq,
+    {
+        match self {
+            Self::Static(a) => a
+                .iter()
+                .enumerate()
+                .find_map(|(i, (k, _))| (k.borrow() == key).then(|| i)),
+            Self::Rc(a) => a.get_index_of(key),
+            Self::Empty => None,
+        }
+    }
+
+    #[inline]
+    pub fn contains_key<Q: ?Sized>(&self, key: &Q) -> bool
+    where
+        K: Borrow<Q>,
+        Q: Hash + Eq,
+    {
+        match self {
+            Self::Static(a) => a.iter().any(|(k, _)| k.borrow() == key),
+            Self::Rc(a) => a.contains_key(key),
+            Self::Empty => false,
+        }
+    }
+
+    #[inline]
+    pub fn last(&self) -> Option<(K, V)> {
+        match self {
+            Self::Static(a) => a.last().cloned(),
+            Self::Rc(a) => a.last().map(|(k, v)| (k.clone(), v.clone())),
+            Self::Empty => None,
+        }
+    }
 }
 
 impl<V: PartialEq + ImplicitClone + 'static> IMap<IString, V> {
+    #[inline]
     pub fn get_static_str(&self, key: &'static str) -> Option<V> {
         let key = IString::from(key);
         match self {
@@ -140,6 +241,7 @@ impl<V: PartialEq + ImplicitClone + 'static> IMap<IString, V> {
 }
 
 impl<V: PartialEq + ImplicitClone + 'static> IMap<&'static str, V> {
+    #[inline]
     pub fn get_static_str(&self, key: &'static str) -> Option<V> {
         match self {
             Self::Static(a) => a.iter().find_map(|(k, v)| (*k == key).then(|| v)).cloned(),
@@ -164,6 +266,46 @@ impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 
         match self {
             Self::Slice(it) => it.next().map(|(k, v)| (k.clone(), v.clone())),
             Self::Map(it) => it.next().map(|(k, v)| (k.clone(), v.clone())),
+            Self::Empty => None,
+        }
+    }
+}
+
+pub enum IMapKeys<'a, K, V> {
+    Slice(std::slice::Iter<'a, (K, V)>),
+    Map(MapKeys<'a, K, V>),
+    Empty,
+}
+
+impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static> Iterator
+    for IMapKeys<'a, K, V>
+{
+    type Item = K;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self {
+            Self::Slice(it) => it.next().map(|(k, _)| k.clone()),
+            Self::Map(it) => it.next().cloned(),
+            Self::Empty => None,
+        }
+    }
+}
+
+pub enum IMapValues<'a, K, V> {
+    Slice(std::slice::Iter<'a, (K, V)>),
+    Map(MapValues<'a, K, V>),
+    Empty,
+}
+
+impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static> Iterator
+    for IMapValues<'a, K, V>
+{
+    type Item = V;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self {
+            Self::Slice(it) => it.next().map(|(_, v)| v.clone()),
+            Self::Map(it) => it.next().cloned(),
             Self::Empty => None,
         }
     }

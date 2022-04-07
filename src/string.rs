@@ -111,4 +111,9 @@ mod test {
     fn static_string() {
         const _STRING: IString = IString::Static("foo");
     }
+
+    #[test]
+    fn deref_str() {
+        assert_eq!(IString::Static("foo").to_uppercase(), "FOO");
+    }
 }

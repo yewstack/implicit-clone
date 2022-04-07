@@ -61,6 +61,7 @@ impl<T: ImplicitClone + 'static> From<Rc<[T]>> for IArray<T> {
 }
 
 impl<T: ImplicitClone + 'static> IArray<T> {
+    #[inline]
     pub fn iter(&self) -> impl Iterator<Item = T> + '_ {
         match self {
             Self::Static(a) => a.iter().cloned(),
@@ -68,6 +69,7 @@ impl<T: ImplicitClone + 'static> IArray<T> {
         }
     }
 
+    #[inline]
     pub fn len(&self) -> usize {
         match self {
             Self::Static(a) => a.len(),
@@ -75,6 +77,7 @@ impl<T: ImplicitClone + 'static> IArray<T> {
         }
     }
 
+    #[inline]
     pub fn is_empty(&self) -> bool {
         match self {
             Self::Static(a) => a.is_empty(),
@@ -82,6 +85,7 @@ impl<T: ImplicitClone + 'static> IArray<T> {
         }
     }
 
+    #[inline]
     pub fn as_slice(&self) -> &[T] {
         match self {
             Self::Static(a) => a,
@@ -89,6 +93,7 @@ impl<T: ImplicitClone + 'static> IArray<T> {
         }
     }
 
+    #[inline]
     pub fn get(&self, index: usize) -> Option<&T> {
         match self {
             Self::Static(a) => a.get(index),
@@ -145,6 +150,17 @@ where
     }
 }
 
+impl<T> std::ops::Deref for IArray<T>
+where
+    T: ImplicitClone,
+{
+    type Target = [T];
+
+    fn deref(&self) -> &Self::Target {
+        self.as_slice()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::*;
@@ -169,5 +185,10 @@ mod test {
     #[test]
     fn static_array() {
         const _ARRAY: IArray<u32> = IArray::Static(&[1, 2, 3]);
+    }
+
+    #[test]
+    fn deref_slice() {
+        assert!(IArray::Static(&[1, 2, 3]).contains(&1));
     }
 }
