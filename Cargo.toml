@@ -1,6 +1,6 @@
 [package]
 name = "implicit-clone"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Cecile Tonglet <cecile.tonglet@cecton.com>"]
 license = "MIT OR Apache-2.0"
 edition = "2021"
@@ -14,6 +14,7 @@ categories = ["rust-patterns"]
 
 [package.metadata.docs.rs]
 all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [features]
 map = ["indexmap"]

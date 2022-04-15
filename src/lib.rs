@@ -81,6 +81,7 @@ impl_implicit_clone!(
 /// assert_eq!(foobarbaz, None);
 /// ```
 #[cfg(feature = "map")]
+#[cfg_attr(docsrs, doc(cfg(feature = "map")))]
 #[macro_export]
 macro_rules! imap_deconstruct {
     ($(let { $($key:ident),+ $(,)? } = $map:expr;)*) => {
