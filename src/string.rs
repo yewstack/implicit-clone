@@ -1,6 +1,12 @@
+/// An immutable string type inspired by [Immutable.js](https://immutable-js.com/).
+///
+/// This type is cheap to clone and thus implements [`ImplicitClone`]. It can be created based on a
+/// `&'static str` or based on a reference counted string slice ([`str`]).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum IString {
+    /// A static string slice.
     Static(&'static str),
+    /// A reference counted string slice.
     Rc(Rc<str>),
 }
 

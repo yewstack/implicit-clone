@@ -5,10 +5,21 @@ use indexmap::IndexMap as Map;
 use std::borrow::Borrow;
 use std::hash::Hash;
 
+/// An immutable hash map type inspired by [Immutable.js](https://immutable-js.com/).
+///
+/// This type is cheap to clone and thus implements [`ImplicitClone`]. It can be created based on a
+/// `&'static [(K, V)]`, or based on a reference counted
+/// [`IndexMap`](https://crates.io/crates/indexmap).
+///
+/// This type has the least stable API at the moment and is subject to change a lot before the 1.0
+/// release.
 #[derive(PartialEq)]
 pub enum IMap<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static> {
+    /// A (small) static map.
     Static(&'static [(K, V)]),
+    /// An reference counted map.
     Rc(Rc<Map<K, V>>),
+    /// An empty map.
     Empty,
 }
 
@@ -86,6 +97,7 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
 }
 
 impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static> IMap<K, V> {
+    /// Return an iterator over the key-value pairs of the map, in their order.
     #[inline]
     pub fn iter(&self) -> IMapIter<K, V> {
         match self {
@@ -95,6 +107,7 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         }
     }
 
+    /// Return an iterator over the keys of the map, in their order.
     #[inline]
     pub fn keys(&self) -> IMapKeys<K, V> {
         match self {
@@ -104,6 +117,7 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         }
     }
 
+    /// Return an iterator over the values of the map, in their order.
     #[inline]
     pub fn values(&self) -> IMapValues<K, V> {
         match self {
@@ -113,6 +127,9 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         }
     }
 
+    /// Return the number of key-value pairs in the map.
+    ///
+    /// Computes in **O(1)** time.
     #[inline]
     pub fn len(&self) -> usize {
         match self {
@@ -122,6 +139,9 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         }
     }
 
+    /// Returns true if the map contains no elements.
+    ///
+    /// Computes in **O(1)** time.
     #[inline]
     pub fn is_empty(&self) -> bool {
         match self {
@@ -131,6 +151,10 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         }
     }
 
+    /// Return a clone to the value stored for `key`, if it is present,
+    /// else `None`.
+    ///
+    /// Computes in **O(1)** time (average).
     #[inline]
     pub fn get<Q: ?Sized>(&self, key: &Q) -> Option<V>
     where
@@ -147,6 +171,10 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         }
     }
 
+    /// Return clones to the key-value pair stored for `key`,
+    /// if it is present, else `None`.
+    ///
+    /// Computes in **O(1)** time (average).
     #[inline]
     pub fn get_key_value<Q: ?Sized>(&self, key: &Q) -> Option<(K, V)>
     where
@@ -160,6 +188,7 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         }
     }
 
+    /// Return item index, key and value
     #[inline]
     pub fn get_full<Q: ?Sized>(&self, key: &Q) -> Option<(usize, K, V)>
     where
@@ -176,6 +205,11 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         }
     }
 
+    /// Get a key-value pair by index.
+    ///
+    /// Valid indices are *0 <= index < self.len()*
+    ///
+    /// Computes in **O(1)** time.
     #[inline]
     pub fn get_index(&self, index: usize) -> Option<(K, V)> {
         match self {
@@ -185,6 +219,9 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         }
     }
 
+    /// Return item index, if it exists in the map.
+    ///
+    /// Computes in **O(1)** time (average).
     #[inline]
     pub fn get_index_of<Q: ?Sized>(&self, key: &Q) -> Option<usize>
     where
@@ -201,6 +238,9 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         }
     }
 
+    /// Return `true` if an equivalent to `key` exists in the map.
+    ///
+    /// Computes in **O(1)** time (average).
     #[inline]
     pub fn contains_key<Q: ?Sized>(&self, key: &Q) -> bool
     where
@@ -214,6 +254,9 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         }
     }
 
+    /// Get the last key-value pair.
+    ///
+    /// Computes in **O(1)** time.
     #[inline]
     pub fn last(&self) -> Option<(K, V)> {
         match self {
@@ -225,6 +268,7 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
 }
 
 impl<V: PartialEq + ImplicitClone + 'static> IMap<IString, V> {
+    #[doc(hidden)]
     #[inline]
     pub fn get_static_str(&self, key: &'static str) -> Option<V> {
         let key = IString::from(key);
@@ -237,6 +281,7 @@ impl<V: PartialEq + ImplicitClone + 'static> IMap<IString, V> {
 }
 
 impl<V: PartialEq + ImplicitClone + 'static> IMap<&'static str, V> {
+    #[doc(hidden)]
     #[inline]
     pub fn get_static_str(&self, key: &'static str) -> Option<V> {
         match self {
@@ -247,6 +292,7 @@ impl<V: PartialEq + ImplicitClone + 'static> IMap<&'static str, V> {
     }
 }
 
+#[allow(missing_docs)]
 pub enum IMapIter<'a, K, V> {
     Slice(std::slice::Iter<'a, (K, V)>),
     Map(MapIter<'a, K, V>),
@@ -267,6 +313,7 @@ impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 
     }
 }
 
+#[allow(missing_docs)]
 pub enum IMapKeys<'a, K, V> {
     Slice(std::slice::Iter<'a, (K, V)>),
     Map(MapKeys<'a, K, V>),
@@ -287,6 +334,7 @@ impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 
     }
 }
 
+#[allow(missing_docs)]
 pub enum IMapValues<'a, K, V> {
     Slice(std::slice::Iter<'a, (K, V)>),
     Map(MapValues<'a, K, V>),
