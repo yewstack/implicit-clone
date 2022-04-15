@@ -1,9 +1,16 @@
 [package]
-name = "imut"
+name = "implicit-clone"
 version = "0.1.0"
+authors = ["Cecile Tonglet <cecile.tonglet@cecton.com>"]
+license = "MIT OR Apache-2.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "Immutable types and ImplicitClone trait similar to Copy"
+repository = "https://github.com/rustminded/implicit-clone"
+homepage = "https://github.com/rustminded/implicit-clone"
+documentation = "https://docs.rs/implicit-clone"
+readme = "README.md"
+keywords = ["immutable", "cheap", "copy", "rc"]
+categories = ["rust-patterns"]
 
 [features]
 map = ["indexmap"]

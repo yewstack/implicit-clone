@@ -1,7 +1,3 @@
-use crate::ImplicitClone;
-use std::fmt;
-use std::rc::Rc;
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum IString {
     Static(&'static str),
@@ -97,8 +93,8 @@ impl AsRef<str> for IString {
 }
 
 #[cfg(test)]
-mod test {
-    use crate::*;
+mod test_string {
+    use super::*;
 
     #[test]
     fn string_cmp() {

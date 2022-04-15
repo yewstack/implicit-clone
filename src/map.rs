@@ -1,13 +1,9 @@
-use crate::ImplicitClone;
-use crate::*;
 use indexmap::map::Iter as MapIter;
 use indexmap::map::Keys as MapKeys;
 use indexmap::map::Values as MapValues;
 use indexmap::IndexMap as Map;
 use std::borrow::Borrow;
-use std::fmt;
 use std::hash::Hash;
-use std::rc::Rc;
 
 #[derive(PartialEq)]
 pub enum IMap<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static> {
@@ -311,35 +307,9 @@ impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 
     }
 }
 
-#[macro_export]
-macro_rules! imap_deconstruct {
-    ($(let { $($key:ident),+ $(,)? } = $map:expr;)*) => {
-        $(
-        $(
-            let $key = $map.get_static_str(stringify!($key));
-        )*
-        )*
-    };
-}
-
 #[cfg(test)]
-mod test {
-    use crate::*;
-
-    #[test]
-    fn imap_deconstruct() {
-        let my_imap = [(IString::from("foo"), 1), (IString::from("bar"), 2)]
-            .into_iter()
-            .collect::<IMap<IString, u32>>();
-        imap_deconstruct!(
-            let { foo, bar, baz } = my_imap;
-            let { foobarbaz } = my_imap;
-        );
-        assert_eq!(foo, Some(1));
-        assert_eq!(bar, Some(2));
-        assert_eq!(baz, None);
-        assert_eq!(foobarbaz, None);
-    }
+mod test_map {
+    use super::*;
 
     #[test]
     fn map_in_map() {

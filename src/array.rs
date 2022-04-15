@@ -1,7 +1,3 @@
-use crate::ImplicitClone;
-use std::fmt;
-use std::rc::Rc;
-
 #[derive(PartialEq)]
 pub enum IArray<T: ImplicitClone + 'static> {
     Static(&'static [T]),
@@ -162,9 +158,8 @@ where
 }
 
 #[cfg(test)]
-mod test {
-    use crate::*;
-    use std::rc::Rc;
+mod test_array {
+    use super::*;
 
     #[test]
     fn array_in_array() {
