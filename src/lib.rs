@@ -1,4 +1,9 @@
-#![deny(missing_docs)]
+#![warn(missing_debug_implementations, missing_docs, unreachable_pub)]
+#![doc(test(
+    no_crate_inject,
+    attr(deny(warnings, rust_2018_idioms), allow(dead_code, unused_variables))
+))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 //! # ImplicitClone
 //!
 //! A library that introduces the marker trait [`ImplicitClone`](crate::ImplicitClone) which allows

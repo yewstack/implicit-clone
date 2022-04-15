@@ -293,7 +293,7 @@ impl<V: PartialEq + ImplicitClone + 'static> IMap<&'static str, V> {
     }
 }
 
-#[allow(missing_docs)]
+#[allow(missing_docs, missing_debug_implementations)]
 pub enum IMapIter<'a, K, V> {
     Slice(std::slice::Iter<'a, (K, V)>),
     Map(MapIter<'a, K, V>),
@@ -314,7 +314,7 @@ impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 
     }
 }
 
-#[allow(missing_docs)]
+#[allow(missing_docs, missing_debug_implementations)]
 pub enum IMapKeys<'a, K, V> {
     Slice(std::slice::Iter<'a, (K, V)>),
     Map(MapKeys<'a, K, V>),
@@ -335,7 +335,7 @@ impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 
     }
 }
 
-#[allow(missing_docs)]
+#[allow(missing_docs, missing_debug_implementations)]
 pub enum IMapValues<'a, K, V> {
     Slice(std::slice::Iter<'a, (K, V)>),
     Map(MapValues<'a, K, V>),
