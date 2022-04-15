@@ -1,6 +1,7 @@
 use crate::ImplicitClone;
 use std::fmt;
-use std::sync::Arc as Rc;
+
+type Rc<T> = std::sync::Arc<T>;
 
 include!("string.rs");
 include!("array.rs");

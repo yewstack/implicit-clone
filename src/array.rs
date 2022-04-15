@@ -1,6 +1,12 @@
+/// An immutable array type inspired by [Immutable.js](https://immutable-js.com/).
+///
+/// This type is cheap to clone and thus implements [`ImplicitClone`]. It can be created based on a
+/// `&'static [T]` or based on a reference counted slice (`T`).
 #[derive(PartialEq)]
 pub enum IArray<T: ImplicitClone + 'static> {
+    /// A static slice.
     Static(&'static [T]),
+    /// A reference counted slice.
     Rc(Rc<[T]>),
 }
 
@@ -57,6 +63,20 @@ impl<T: ImplicitClone + 'static> From<Rc<[T]>> for IArray<T> {
 }
 
 impl<T: ImplicitClone + 'static> IArray<T> {
+    /// Returns an iterator over the slice.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use implicit_clone::unsync::*;
+    /// let x = IArray::<u8>::Static(&[1, 2, 4]);
+    /// let mut iterator = x.iter();
+    ///
+    /// assert_eq!(iterator.next(), Some(1));
+    /// assert_eq!(iterator.next(), Some(2));
+    /// assert_eq!(iterator.next(), Some(4));
+    /// assert_eq!(iterator.next(), None);
+    /// ```
     #[inline]
     pub fn iter(&self) -> impl Iterator<Item = T> + '_ {
         match self {
@@ -65,6 +85,16 @@ impl<T: ImplicitClone + 'static> IArray<T> {
         }
     }
 
+    /// Returns the number of elements in the vector, also referred to
+    /// as its 'length'.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use implicit_clone::unsync::*;
+    /// let a = IArray::<u8>::Static(&[1, 2, 3]);
+    /// assert_eq!(a.len(), 3);
+    /// ```
     #[inline]
     pub fn len(&self) -> usize {
         match self {
@@ -73,6 +103,18 @@ impl<T: ImplicitClone + 'static> IArray<T> {
         }
     }
 
+    /// Returns `true` if the vector contains no elements.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use implicit_clone::unsync::*;
+    /// let v = IArray::<u8>::Static(&[]);
+    /// assert!(v.is_empty());
+    ///
+    /// let v = IArray::<u8>::Static(&[1]);
+    /// assert!(!v.is_empty());
+    /// ```
     #[inline]
     pub fn is_empty(&self) -> bool {
         match self {
@@ -81,6 +123,18 @@ impl<T: ImplicitClone + 'static> IArray<T> {
         }
     }
 
+    /// Extracts a slice containing the entire array.
+    ///
+    /// Equivalent to `&s[..]`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use implicit_clone::unsync::*;
+    /// use std::io::{self, Write};
+    /// let buffer = IArray::<u8>::Static(&[1, 2, 3, 5, 8]);
+    /// io::sink().write(buffer.as_slice()).unwrap();
+    /// ```
     #[inline]
     pub fn as_slice(&self) -> &[T] {
         match self {
@@ -89,11 +143,21 @@ impl<T: ImplicitClone + 'static> IArray<T> {
         }
     }
 
+    /// Returns a clone of an element at a position or `None` if out of bounds.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use implicit_clone::unsync::*;
+    /// let v = IArray::<u8>::Static(&[10, 40, 30]);
+    /// assert_eq!(Some(40), v.get(1));
+    /// assert_eq!(None, v.get(3));
+    /// ```
     #[inline]
-    pub fn get(&self, index: usize) -> Option<&T> {
+    pub fn get(&self, index: usize) -> Option<T> {
         match self {
-            Self::Static(a) => a.get(index),
-            Self::Rc(a) => a.get(index),
+            Self::Static(a) => a.get(index).cloned(),
+            Self::Rc(a) => a.get(index).cloned(),
         }
     }
 }
