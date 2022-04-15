@@ -1,4 +1,3 @@
-![Rust](https://github.com/rustminded/implicit-clone/workflows/Rust/badge.svg)
 ![main](https://github.com/rustminded/implicit-clone/workflows/main/badge.svg)
 [![Latest Version](https://img.shields.io/crates/v/implicit-clone.svg)](https://crates.io/crates/implicit-clone)
 ![License](https://img.shields.io/crates/l/implicit-clone)
