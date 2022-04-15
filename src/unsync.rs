@@ -7,4 +7,4 @@ include!("array.rs");
 #[cfg(feature = "map")]
 include!("map.rs");
 
-impl<T> ImplicitClone for Rc<T> {}
+impl<T: ?Sized> ImplicitClone for Rc<T> {}
