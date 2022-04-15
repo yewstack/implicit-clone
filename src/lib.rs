@@ -30,7 +30,6 @@
 //! [std::rc::Rc]: https://doc.rust-lang.org/std/rc/struct.Rc.html
 //! [std::sync::Arc]: https://doc.rust-lang.org/std/sync/struct.Arc.html
 
-
 /// Thread-safe version of immutable types.
 pub mod sync;
 /// Single-threaded version of immutable types.
