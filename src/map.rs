@@ -13,6 +13,7 @@ use std::hash::Hash;
 ///
 /// This type has the least stable API at the moment and is subject to change a lot before the 1.0
 /// release.
+#[cfg_attr(docsrs, doc(cfg(feature = "map")))]
 #[derive(PartialEq)]
 pub enum IMap<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static> {
     /// A (small) static map.
