@@ -109,7 +109,7 @@ impl<T: ImplicitClone + 'static> IArray<T> {
     ///
     /// ```
     /// # use implicit_clone::unsync::*;
-    /// let v = IArray::<u8>::Static(&[]);
+    /// let v = IArray::<u8>::default();
     /// assert!(v.is_empty());
     ///
     /// let v = IArray::<u8>::Static(&[1]);
