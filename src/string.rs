@@ -2,21 +2,13 @@
 ///
 /// This type is cheap to clone and thus implements [`ImplicitClone`]. It can be created based on a
 /// `&'static str` or based on a reference counted string slice ([`str`]).
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum IString {
-    /// A static string slice.
-    Static(&'static str),
-    /// A reference counted string slice.
-    Rc(Rc<str>),
-}
+pub type IString = ISlice<str>;
 
 impl Default for IString {
     fn default() -> Self {
         Self::Static("")
     }
 }
-
-impl ImplicitClone for IString {}
 
 impl fmt::Display for IString {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
