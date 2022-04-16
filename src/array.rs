@@ -2,32 +2,7 @@
 ///
 /// This type is cheap to clone and thus implements [`ImplicitClone`]. It can be created based on a
 /// `&'static [T]` or based on a reference counted slice (`T`).
-#[derive(PartialEq)]
-pub enum IArray<T: ImplicitClone + 'static> {
-    /// A static slice.
-    Static(&'static [T]),
-    /// A reference counted slice.
-    Rc(Rc<[T]>),
-}
-
-// TODO add insta tests
-impl<T: fmt::Debug + ImplicitClone + 'static> fmt::Debug for IArray<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::Static(a) => a.fmt(f),
-            Self::Rc(a) => a.fmt(f),
-        }
-    }
-}
-
-impl<T: ImplicitClone + 'static> Clone for IArray<T> {
-    fn clone(&self) -> Self {
-        match self {
-            Self::Static(a) => Self::Static(a),
-            Self::Rc(a) => Self::Rc(a.clone()),
-        }
-    }
-}
+pub type IArray<T: ImplicitClone + 'static> = ISlice<[T]>;
 
 impl<T: ImplicitClone + 'static> Default for IArray<T> {
     fn default() -> Self {
@@ -41,8 +16,6 @@ impl<T: ImplicitClone + 'static> FromIterator<T> for IArray<T> {
         Self::Rc(Rc::from(vec))
     }
 }
-
-impl<T: ImplicitClone + 'static> ImplicitClone for IArray<T> {}
 
 impl<T: ImplicitClone + 'static> From<&'static [T]> for IArray<T> {
     fn from(a: &'static [T]) -> IArray<T> {
