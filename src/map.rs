@@ -20,8 +20,6 @@ pub enum IMap<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClo
     Static(&'static [(K, V)]),
     /// An reference counted map.
     Rc(Rc<Map<K, V>>),
-    /// An empty map.
-    Empty,
 }
 
 // TODO add insta tests
@@ -34,7 +32,6 @@ impl<
         match self {
             Self::Static(a) => a.fmt(f),
             Self::Rc(a) => a.fmt(f),
-            Self::Empty => write!(f, "{{}}"),
         }
     }
 }
@@ -46,7 +43,6 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         match self {
             Self::Static(a) => Self::Static(a),
             Self::Rc(a) => Self::Rc(a.clone()),
-            Self::Empty => Self::Empty,
         }
     }
 }
@@ -55,7 +51,7 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
     for IMap<K, V>
 {
     fn default() -> Self {
-        Self::Empty
+        Self::Static(&[])
     }
 }
 
@@ -104,7 +100,6 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         match self {
             Self::Static(a) => IMapIter::Slice(a.iter()),
             Self::Rc(a) => IMapIter::Map(a.iter()),
-            Self::Empty => IMapIter::Empty,
         }
     }
 
@@ -114,7 +109,6 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         match self {
             Self::Static(a) => IMapKeys::Slice(a.iter()),
             Self::Rc(a) => IMapKeys::Map(a.keys()),
-            Self::Empty => IMapKeys::Empty,
         }
     }
 
@@ -124,7 +118,6 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         match self {
             Self::Static(a) => IMapValues::Slice(a.iter()),
             Self::Rc(a) => IMapValues::Map(a.values()),
-            Self::Empty => IMapValues::Empty,
         }
     }
 
@@ -136,7 +129,6 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         match self {
             Self::Static(a) => a.len(),
             Self::Rc(a) => a.len(),
-            Self::Empty => 0,
         }
     }
 
@@ -148,7 +140,6 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         match self {
             Self::Static(a) => a.is_empty(),
             Self::Rc(a) => a.is_empty(),
-            Self::Empty => true,
         }
     }
 
@@ -168,7 +159,6 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
                 .find_map(|(k, v)| (k.borrow() == key).then(|| v))
                 .cloned(),
             Self::Rc(a) => a.get(key).cloned(),
-            Self::Empty => None,
         }
     }
 
@@ -185,7 +175,6 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         match self {
             Self::Static(a) => a.iter().find(|(k, _)| k.borrow() == key).cloned(),
             Self::Rc(a) => a.get_key_value(key).map(|(k, v)| (k.clone(), v.clone())),
-            Self::Empty => None,
         }
     }
 
@@ -202,7 +191,6 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
                 .enumerate()
                 .find_map(|(i, (k, v))| (k.borrow() == key).then(|| (i, k.clone(), v.clone()))),
             Self::Rc(a) => a.get_full(key).map(|(i, k, v)| (i, k.clone(), v.clone())),
-            Self::Empty => None,
         }
     }
 
@@ -216,7 +204,6 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         match self {
             Self::Static(a) => a.get(index).cloned(),
             Self::Rc(a) => a.get_index(index).map(|(k, v)| (k.clone(), v.clone())),
-            Self::Empty => None,
         }
     }
 
@@ -235,7 +222,6 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
                 .enumerate()
                 .find_map(|(i, (k, _))| (k.borrow() == key).then(|| i)),
             Self::Rc(a) => a.get_index_of(key),
-            Self::Empty => None,
         }
     }
 
@@ -251,7 +237,6 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         match self {
             Self::Static(a) => a.iter().any(|(k, _)| k.borrow() == key),
             Self::Rc(a) => a.contains_key(key),
-            Self::Empty => false,
         }
     }
 
@@ -263,7 +248,6 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         match self {
             Self::Static(a) => a.last().cloned(),
             Self::Rc(a) => a.last().map(|(k, v)| (k.clone(), v.clone())),
-            Self::Empty => None,
         }
     }
 }
@@ -276,7 +260,6 @@ impl<V: PartialEq + ImplicitClone + 'static> IMap<IString, V> {
         match self {
             Self::Static(a) => a.iter().find_map(|(k, v)| (*k == key).then(|| v)).cloned(),
             Self::Rc(a) => a.get(&key).cloned(),
-            Self::Empty => None,
         }
     }
 }
@@ -288,7 +271,6 @@ impl<V: PartialEq + ImplicitClone + 'static> IMap<&'static str, V> {
         match self {
             Self::Static(a) => a.iter().find_map(|(k, v)| (*k == key).then(|| v)).cloned(),
             Self::Rc(a) => a.get(key).cloned(),
-            Self::Empty => None,
         }
     }
 }
@@ -297,7 +279,6 @@ impl<V: PartialEq + ImplicitClone + 'static> IMap<&'static str, V> {
 pub enum IMapIter<'a, K, V> {
     Slice(std::slice::Iter<'a, (K, V)>),
     Map(MapIter<'a, K, V>),
-    Empty,
 }
 
 impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static> Iterator
@@ -309,7 +290,6 @@ impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 
         match self {
             Self::Slice(it) => it.next().map(|(k, v)| (k.clone(), v.clone())),
             Self::Map(it) => it.next().map(|(k, v)| (k.clone(), v.clone())),
-            Self::Empty => None,
         }
     }
 }
@@ -318,7 +298,6 @@ impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 
 pub enum IMapKeys<'a, K, V> {
     Slice(std::slice::Iter<'a, (K, V)>),
     Map(MapKeys<'a, K, V>),
-    Empty,
 }
 
 impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static> Iterator
@@ -330,7 +309,6 @@ impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 
         match self {
             Self::Slice(it) => it.next().map(|(k, _)| k.clone()),
             Self::Map(it) => it.next().cloned(),
-            Self::Empty => None,
         }
     }
 }
@@ -339,7 +317,6 @@ impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 
 pub enum IMapValues<'a, K, V> {
     Slice(std::slice::Iter<'a, (K, V)>),
     Map(MapValues<'a, K, V>),
-    Empty,
 }
 
 impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static> Iterator
@@ -351,7 +328,6 @@ impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 
         match self {
             Self::Slice(it) => it.next().map(|(_, v)| v.clone()),
             Self::Map(it) => it.next().cloned(),
-            Self::Empty => None,
         }
     }
 }
