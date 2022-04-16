@@ -2,7 +2,7 @@
 ///
 /// This type is cheap to clone and thus implements [`ImplicitClone`]. It can be created based on a
 /// `&'static [T]` or based on a reference counted slice (`T`).
-pub type IArray<T: ImplicitClone + 'static> = ISlice<[T]>;
+pub type IArray<T> = ISlice<[T]>;
 
 impl<T: ImplicitClone + 'static> Default for IArray<T> {
     fn default() -> Self {
@@ -69,6 +69,8 @@ impl<T: ImplicitClone + 'static> IArray<T> {
     /// assert_eq!(a.len(), 3);
     /// ```
     #[inline]
+    // NOTE: clippy is probably a bit confused by the type alias
+    #[allow(clippy::len_without_is_empty)]
     pub fn len(&self) -> usize {
         match self {
             Self::Static(a) => a.len(),
