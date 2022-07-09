@@ -2,7 +2,7 @@
 ///
 /// This type is cheap to clone and thus implements [`ImplicitClone`]. It can be created based on a
 /// `&'static str` or based on a reference counted string slice ([`str`]).
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum IString {
     /// A static string slice.
     Static(&'static str),
@@ -98,6 +98,13 @@ impl AsRef<str> for IString {
     }
 }
 
+impl std::hash::Hash for IString {
+    #[inline]
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        std::hash::Hash::hash(self.as_ref(), state)
+    }
+}
+
 impl std::borrow::Borrow<str> for IString {
     fn borrow(&self) -> &str {
         &*self
@@ -123,5 +130,16 @@ mod test_string {
     #[test]
     fn deref_str() {
         assert_eq!(IString::Static("foo").to_uppercase(), "FOO");
+    }
+
+    #[test]
+    fn borrow_str() {
+        let map: std::collections::HashMap<_, _> = [
+            (IString::Static("foo"), true),
+            (IString::Rc(Rc::from("bar")), true)
+        ].into_iter().collect();
+
+        assert_eq!(map.get("foo").copied(), Some(true));
+        assert_eq!(map.get("bar").copied(), Some(true));
     }
 }
