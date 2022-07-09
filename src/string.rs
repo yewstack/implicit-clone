@@ -98,6 +98,12 @@ impl AsRef<str> for IString {
     }
 }
 
+impl std::borrow::Borrow<str> for IString {
+    fn borrow(&self) -> &str {
+        &*self
+    }
+}
+
 #[cfg(test)]
 mod test_string {
     use super::*;
