@@ -59,6 +59,12 @@ impl From<String> for IString {
     }
 }
 
+impl From<&String> for IString {
+    fn from(s: &String) -> IString {
+        IString::Rc(Rc::from(s.as_str()))
+    }
+}
+
 impl From<Rc<str>> for IString {
     fn from(s: Rc<str>) -> IString {
         IString::Rc(s)
