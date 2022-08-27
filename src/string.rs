@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::fmt::Debug;
 
 /// An immutable string type inspired by [Immutable.js](https://immutable-js.com/).
@@ -62,6 +63,15 @@ impl From<String> for IString {
 impl From<Rc<str>> for IString {
     fn from(s: Rc<str>) -> IString {
         IString::Rc(s)
+    }
+}
+
+impl From<Cow<'static, str>> for IString {
+    fn from(cow: Cow<'static, str>) -> Self {
+        match cow {
+            Cow::Borrowed(s) => IString::Static(s),
+            Cow::Owned(s) => s.into(),
+        }
     }
 }
 
