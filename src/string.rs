@@ -32,6 +32,21 @@ impl IString {
             Self::Rc(s) => &*s,
         }
     }
+
+    /// Obtain the contents of [`IString`] as a [`Cow`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use implicit_clone::unsync::IString;
+    /// use std::borrow::Cow;
+    /// let s = IString::from("foo");
+    ///
+    /// let cow: Cow<'_, str> = s.as_cow();
+    /// ```
+    pub fn as_cow(&self) -> Cow<'_, str> {
+        Cow::Borrowed(self.as_str())
+    }
 }
 
 impl Default for IString {
