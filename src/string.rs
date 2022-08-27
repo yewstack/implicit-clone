@@ -189,4 +189,16 @@ mod test_string {
         assert_eq!(map.get("foo").copied(), Some(true));
         assert_eq!(map.get("bar").copied(), Some(true));
     }
+
+    #[test]
+    fn as_cow_does_not_clone() {
+        let rc_s = Rc::from("foo");
+        let s = IString::Rc(Rc::clone(&rc_s));
+        assert_eq!(Rc::strong_count(&rc_s), 2);
+        let cow: Cow<'_, str> = s.as_cow();
+        assert_eq!(Rc::strong_count(&rc_s), 2);
+        // this assert exists to ensure the cow lives after the strong_count asset
+        assert_eq!(cow, "foo");
+
+    }
 }
