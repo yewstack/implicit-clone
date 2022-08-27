@@ -28,8 +28,8 @@ impl IString {
     /// ```
     pub fn as_str(&self) -> &str {
         match self {
-            Self::Static(s) => *s,
-            Self::Rc(s) => &*s,
+            Self::Static(s) => s,
+            Self::Rc(s) => s,
         }
     }
 
