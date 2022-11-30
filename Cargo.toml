@@ -20,5 +20,4 @@ rustdoc-args = ["--cfg", "docsrs"]
 map = ["indexmap"]
 
 [dependencies]
-impl-trait-for-tuples = "0.2"
 indexmap = { version = "1", optional = true }
