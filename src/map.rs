@@ -220,7 +220,7 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
             Self::Static(a) => a
                 .iter()
                 .enumerate()
-                .find_map(|(i, (k, _))| (k.borrow() == key).then(|| i)),
+                .find_map(|(i, (k, _))| (k.borrow() == key).then_some(i)),
             Self::Rc(a) => a.get_index_of(key),
         }
     }
