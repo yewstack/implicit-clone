@@ -250,4 +250,10 @@ mod test_array {
     fn deref_slice() {
         assert!(IArray::Static(&[1, 2, 3]).contains(&1));
     }
+
+    #[test]
+    fn tuple_in_array() {
+        const _ARRAY_2: IArray<(u32, u32)> = IArray::Static(&[]);
+        const _ARRAY_5: IArray<(u32, u32, u32, u32, u32)> = IArray::Static(&[]);
+    }
 }

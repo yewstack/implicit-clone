@@ -44,6 +44,7 @@ pub mod unsync;
 ///
 /// Behaves exactly like [`Copy`] but calls the [`Clone`] implementation instead and must be
 /// implemented in the host library.
+#[impl_trait_for_tuples::impl_for_tuples(5)]
 pub trait ImplicitClone: Clone {}
 
 impl<T: ImplicitClone> ImplicitClone for Option<T> {}
