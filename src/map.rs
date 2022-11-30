@@ -14,7 +14,7 @@ use std::hash::Hash;
 /// This type has the least stable API at the moment and is subject to change a lot before the 1.0
 /// release.
 #[cfg_attr(docsrs, doc(cfg(feature = "map")))]
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq)]
 pub enum IMap<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static> {
     /// A (small) static map.
     Static(&'static [(K, V)]),
@@ -156,7 +156,7 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         match self {
             Self::Static(a) => a
                 .iter()
-                .find_map(|(k, v)| (k.borrow() == key).then(|| v))
+                .find_map(|(k, v)| (k.borrow() == key).then_some(v))
                 .cloned(),
             Self::Rc(a) => a.get(key).cloned(),
         }
@@ -258,7 +258,7 @@ impl<V: PartialEq + ImplicitClone + 'static> IMap<IString, V> {
     pub fn get_static_str(&self, key: &'static str) -> Option<V> {
         let key = IString::from(key);
         match self {
-            Self::Static(a) => a.iter().find_map(|(k, v)| (*k == key).then(|| v)).cloned(),
+            Self::Static(a) => a.iter().find_map(|(k, v)| (*k == key).then_some(v)).cloned(),
             Self::Rc(a) => a.get(&key).cloned(),
         }
     }
@@ -269,7 +269,7 @@ impl<V: PartialEq + ImplicitClone + 'static> IMap<&'static str, V> {
     #[inline]
     pub fn get_static_str(&self, key: &'static str) -> Option<V> {
         match self {
-            Self::Static(a) => a.iter().find_map(|(k, v)| (*k == key).then(|| v)).cloned(),
+            Self::Static(a) => a.iter().find_map(|(k, v)| (*k == key).then_some(v)).cloned(),
             Self::Rc(a) => a.get(key).cloned(),
         }
     }
@@ -376,5 +376,11 @@ mod test_map {
     #[test]
     fn static_map() {
         const _MAP: IMap<&str, u32> = IMap::Static(&[("foo", 1)]);
+    }
+
+    #[test]
+    fn floats_in_map() {
+        const _MAP_F32: IArray<f32, f32> = IMap::Static(&[]);
+        const _MAP_F64: IArray<f64, f64> = IMap::Static(&[]);
     }
 }
