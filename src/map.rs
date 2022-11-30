@@ -380,7 +380,7 @@ mod test_map {
 
     #[test]
     fn floats_in_map() {
-        const _MAP_F32: IArray<f32, f32> = IMap::Static(&[]);
-        const _MAP_F64: IArray<f64, f64> = IMap::Static(&[]);
+        const _MAP_F32: IMap<u32, f32> = IMap::Static(&[]);
+        const _MAP_F64: IMap<u32, f64> = IMap::Static(&[]);
     }
 }
