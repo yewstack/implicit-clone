@@ -252,6 +252,12 @@ mod test_array {
     }
 
     #[test]
+    fn tuple_in_array() {
+        const _ARRAY_2: IArray<(u32, u32)> = IArray::Static(&[]);
+        const _ARRAY_5: IArray<(u32, u32, u32, u32, u32)> = IArray::Static(&[]);
+    }
+
+    #[test]
     fn floats_in_array() {
         const _ARRAY_F32: IArray<f32> = IArray::Static(&[]);
         const _ARRAY_F64: IArray<f64> = IArray::Static(&[]);

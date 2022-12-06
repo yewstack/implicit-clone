@@ -64,6 +64,24 @@ impl_implicit_clone!(
     &'static str,
 );
 
+macro_rules! impl_implicit_clone_for_tuple {
+    ($($param:ident),+) => {
+        impl<$($param: ImplicitClone),+> ImplicitClone for ($($param),+) {}
+    };
+}
+
+impl_implicit_clone_for_tuple!(T1, T2);
+impl_implicit_clone_for_tuple!(T1, T2, T3);
+impl_implicit_clone_for_tuple!(T1, T2, T3, T4);
+impl_implicit_clone_for_tuple!(T1, T2, T3, T4, T5);
+impl_implicit_clone_for_tuple!(T1, T2, T3, T4, T5, T6);
+impl_implicit_clone_for_tuple!(T1, T2, T3, T4, T5, T6, T7);
+impl_implicit_clone_for_tuple!(T1, T2, T3, T4, T5, T6, T7, T8);
+impl_implicit_clone_for_tuple!(T1, T2, T3, T4, T5, T6, T7, T8, T9);
+impl_implicit_clone_for_tuple!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10);
+impl_implicit_clone_for_tuple!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11);
+impl_implicit_clone_for_tuple!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12);
+
 /// A macro to help deconstructs maps inspired by JS.
 ///
 /// This macro is an experiment and may change or be entirely deleted before the 1.0 release.
