@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::fmt::Debug;
 
 /// An immutable string type inspired by [Immutable.js](https://immutable-js.com/).
@@ -27,9 +28,24 @@ impl IString {
     /// ```
     pub fn as_str(&self) -> &str {
         match self {
-            Self::Static(s) => *s,
-            Self::Rc(s) => &*s,
+            Self::Static(s) => s,
+            Self::Rc(s) => s,
         }
+    }
+
+    /// Obtain the contents of [`IString`] as a [`Cow`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use implicit_clone::unsync::IString;
+    /// use std::borrow::Cow;
+    /// let s = IString::from("foo");
+    ///
+    /// let cow: Cow<'_, str> = s.as_cow();
+    /// ```
+    pub fn as_cow(&self) -> Cow<'_, str> {
+        Cow::Borrowed(self.as_str())
     }
 }
 
@@ -62,6 +78,15 @@ impl From<String> for IString {
 impl From<Rc<str>> for IString {
     fn from(s: Rc<str>) -> IString {
         IString::Rc(s)
+    }
+}
+
+impl From<Cow<'static, str>> for IString {
+    fn from(cow: Cow<'static, str>) -> Self {
+        match cow {
+            Cow::Borrowed(s) => IString::Static(s),
+            Cow::Owned(s) => s.into(),
+        }
     }
 }
 
@@ -163,5 +188,17 @@ mod test_string {
 
         assert_eq!(map.get("foo").copied(), Some(true));
         assert_eq!(map.get("bar").copied(), Some(true));
+    }
+
+    #[test]
+    fn as_cow_does_not_clone() {
+        let rc_s = Rc::from("foo");
+        let s = IString::Rc(Rc::clone(&rc_s));
+        assert_eq!(Rc::strong_count(&rc_s), 2);
+        let cow: Cow<'_, str> = s.as_cow();
+        assert_eq!(Rc::strong_count(&rc_s), 2);
+        // this assert exists to ensure the cow lives after the strong_count asset
+        assert_eq!(cow, "foo");
+
     }
 }
