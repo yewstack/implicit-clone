@@ -2,7 +2,7 @@
 ///
 /// This type is cheap to clone and thus implements [`ImplicitClone`]. It can be created based on a
 /// `&'static [T]` or based on a reference counted slice (`T`).
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq)]
 pub enum IArray<T: ImplicitClone + 'static> {
     /// A static slice.
     Static(&'static [T]),
@@ -255,5 +255,11 @@ mod test_array {
     fn tuple_in_array() {
         const _ARRAY_2: IArray<(u32, u32)> = IArray::Static(&[]);
         const _ARRAY_5: IArray<(u32, u32, u32, u32, u32)> = IArray::Static(&[]);
+    }
+
+    #[test]
+    fn floats_in_array() {
+        const _ARRAY_F32: IArray<f32> = IArray::Static(&[]);
+        const _ARRAY_F64: IArray<f64> = IArray::Static(&[]);
     }
 }
