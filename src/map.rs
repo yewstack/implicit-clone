@@ -156,7 +156,7 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
         match self {
             Self::Static(a) => a
                 .iter()
-                .find_map(|(k, v)| (k.borrow() == key).then_some(v))
+                .find_map(|(k, v)| (k.borrow() == key).then(|| v))
                 .cloned(),
             Self::Rc(a) => a.get(key).cloned(),
         }
@@ -220,7 +220,7 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
             Self::Static(a) => a
                 .iter()
                 .enumerate()
-                .find_map(|(i, (k, _))| (k.borrow() == key).then_some(i)),
+                .find_map(|(i, (k, _))| (k.borrow() == key).then(|| i)),
             Self::Rc(a) => a.get_index_of(key),
         }
     }
@@ -258,7 +258,7 @@ impl<V: PartialEq + ImplicitClone + 'static> IMap<IString, V> {
     pub fn get_static_str(&self, key: &'static str) -> Option<V> {
         let key = IString::from(key);
         match self {
-            Self::Static(a) => a.iter().find_map(|(k, v)| (*k == key).then_some(v)).cloned(),
+            Self::Static(a) => a.iter().find_map(|(k, v)| (*k == key).then(|| v)).cloned(),
             Self::Rc(a) => a.get(&key).cloned(),
         }
     }
@@ -269,7 +269,7 @@ impl<V: PartialEq + ImplicitClone + 'static> IMap<&'static str, V> {
     #[inline]
     pub fn get_static_str(&self, key: &'static str) -> Option<V> {
         match self {
-            Self::Static(a) => a.iter().find_map(|(k, v)| (*k == key).then_some(v)).cloned(),
+            Self::Static(a) => a.iter().find_map(|(k, v)| (*k == key).then(|| v)).cloned(),
             Self::Rc(a) => a.get(key).cloned(),
         }
     }

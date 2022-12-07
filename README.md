@@ -1,9 +1,9 @@
-![main](https://github.com/rustminded/implicit-clone/workflows/main/badge.svg)
+![Rust](https://github.com/yewstack/implicit-clone/actions/workflows/rust.yml/badge.svg)
 [![Latest Version](https://img.shields.io/crates/v/implicit-clone.svg)](https://crates.io/crates/implicit-clone)
 ![License](https://img.shields.io/crates/l/implicit-clone)
 [![Docs.rs](https://docs.rs/implicit-clone/badge.svg)](https://docs.rs/implicit-clone)
-[![LOC](https://tokei.rs/b1/github/rustminded/implicit-clone)](https://github.com/rustminded/implicit-clone)
-[![Dependency Status](https://deps.rs/repo/github/rustminded/implicit-clone/status.svg)](https://deps.rs/repo/github/rustminded/implicit-clone)
+[![LOC](https://tokei.rs/b1/github/yewstack/implicit-clone)](https://github.com/yewstack/implicit-clone)
+[![Dependency Status](https://deps.rs/repo/github/yewstack/implicit-clone/status.svg)](https://deps.rs/repo/github/yewstack/implicit-clone)
 
 <!-- cargo-rdme start -->
 

@@ -1,4 +1,5 @@
 #![warn(missing_debug_implementations, missing_docs, unreachable_pub)]
+#![allow(clippy::unnecessary_lazy_evaluations)]
 #![doc(test(
     no_crate_inject,
     attr(deny(warnings, rust_2018_idioms), allow(dead_code, unused_variables))
