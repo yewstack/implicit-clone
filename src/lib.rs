@@ -63,6 +63,7 @@ impl_implicit_clone!(
     bool,
     usize, isize,
     &'static str,
+    (),
 );
 
 macro_rules! impl_implicit_clone_for_tuple {
