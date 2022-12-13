@@ -119,7 +119,7 @@ macro_rules! imap_deconstruct {
     };
 }
 
-/// Same as `format!()` but generate an `IString` instead.
+/// Same as `format!()` but generates an `IString` instead.
 ///
 /// # Usage
 ///
@@ -133,5 +133,25 @@ macro_rules! imap_deconstruct {
 macro_rules! iformat {
     ($($tt:tt)*) => {
         IString::from(format!($($tt)*))
+    };
+}
+
+/// Same as `vec![]` but generates an `IArray` instead.
+///
+/// # Usage
+///
+/// ```
+/// use implicit_clone::{sync::IArray, iarray};
+///
+/// let a = iarray!["foo", "bar"];
+/// assert_eq!(a, ["foo", "bar"]);
+///
+/// let a = iarray!["foo"; 2];
+/// assert_eq!(a, ["foo", "foo"]);
+/// ```
+#[macro_export]
+macro_rules! iarray {
+    ($($tt:tt)*) => {
+        IArray::Static(&[$($tt)*])
     };
 }
