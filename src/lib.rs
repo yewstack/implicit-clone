@@ -121,6 +121,8 @@ macro_rules! imap_deconstruct {
 
 /// Same as `format!()` but generate an `IString` instead.
 ///
+/// # Usage
+///
 /// ```
 /// use implicit_clone::{sync::IString, iformat};
 ///
