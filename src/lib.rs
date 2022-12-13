@@ -119,22 +119,17 @@ macro_rules! imap_deconstruct {
     };
 }
 
-/// Same as `format!()` but generate an IString instead.
+/// Same as `format!()` but generate an `IString` instead.
+///
+/// ```
+/// use implicit_clone::{sync::IString, iformat};
+///
+/// let s = iformat!("stuff={}", 42);
+/// assert_eq!(s, "stuff=42");
+/// ```
 #[macro_export]
 macro_rules! iformat {
     ($($tt:tt)*) => {
         IString::from(format!($($tt)*))
     };
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn macro_iformat() {
-        use crate::unsync::IString;
-        let s = iformat!("stuff={}", 42);
-        assert_eq!(s, "stuff=42");
-    }
 }
