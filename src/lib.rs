@@ -136,6 +136,24 @@ macro_rules! iformat {
     };
 }
 
+/// Shorthand to create `IString::Static`.
+///
+/// # Usage
+///
+/// ```
+/// use implicit_clone::{sync::IString, istr};
+///
+/// let s = istr!("foo");
+/// assert_eq!(s, "foo");
+/// assert_eq!(s, IString::Static("foo"));
+/// ```
+#[macro_export]
+macro_rules! istr {
+    ($($tt:tt)*) => {
+        IString::Static($($tt)*)
+    };
+}
+
 /// Same as `vec![]` but generates an `IArray` instead.
 ///
 /// # Usage
