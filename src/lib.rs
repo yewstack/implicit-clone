@@ -62,7 +62,7 @@ impl_implicit_clone!(
     f32, f64,
     bool,
     usize, isize,
-    &'static str,
+    &'static str, char,
     (),
 );
 
