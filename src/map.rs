@@ -332,6 +332,42 @@ impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 
     }
 }
 
+#[cfg(feature = "serde")]
+impl<K, V> serde::Serialize for IMap<K, V>
+where
+    K: Eq + Hash + ImplicitClone + 'static + serde::Serialize,
+    V: PartialEq + ImplicitClone + 'static + serde::Serialize,
+{
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeMap;
+        let mut seq = serializer.serialize_map(Some(self.len()))?;
+        match self {
+            Self::Static(a) => {
+                for (k, v) in a.iter() {
+                    seq.serialize_entry(k, v)?;
+                }
+            },
+            Self::Rc(a) => {
+                for (k, v) in a.iter() {
+                    seq.serialize_entry(k, v)?;
+                }
+            }
+        }
+        seq.end()
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de, K, V> serde::Deserialize<'de> for IMap<K, V>
+where
+    K: Eq + Hash + ImplicitClone + 'static + serde::Deserialize<'de>,
+    V: PartialEq + ImplicitClone + 'static + serde::Deserialize<'de>,
+{
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        <Map<K, V> as serde::Deserialize>::deserialize(deserializer).map(IMap::<K, V>::from)
+    }
+}
+
 #[cfg(test)]
 mod test_map {
     use super::*;
