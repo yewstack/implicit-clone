@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 use std::fmt::Debug;
+use std::str::FromStr;
 
 /// An immutable string type inspired by [Immutable.js](https://immutable-js.com/).
 ///
@@ -144,6 +145,13 @@ impl std::hash::Hash for IString {
 impl std::borrow::Borrow<str> for IString {
     fn borrow(&self) -> &str {
         self.as_str()
+    }
+}
+
+impl FromStr for IString {
+    type Err = std::convert::Infallible;
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Ok(IString::from(String::from(value)))
     }
 }
 
