@@ -44,8 +44,6 @@ jobs:
           default: true
           override: true
 
-      - uses: Swatinem/rust-cache@v1
-
       - name: Change indexmap version
         if: matrix.indexmap != 'latest'
         run: |
