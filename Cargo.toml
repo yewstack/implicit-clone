@@ -19,6 +19,8 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 [features]
 map = ["indexmap"]
+serde = ["dep:serde", "indexmap/serde"]
 
 [dependencies]
 indexmap = { version = "2", optional = true }
+serde = { version = "1", optional = true }

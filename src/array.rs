@@ -221,6 +221,20 @@ where
     }
 }
 
+#[cfg(feature = "serde")]
+impl<T: serde::Serialize + ImplicitClone> serde::Serialize for IArray<T> {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        <[T] as serde::Serialize>::serialize(self, serializer)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de, T: serde::Deserialize<'de> + ImplicitClone> serde::Deserialize<'de> for IArray<T> {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        <Vec<T> as serde::Deserialize>::deserialize(deserializer).map(IArray::<T>::from)
+    }
+}
+
 #[cfg(test)]
 mod test_array {
     use super::*;
