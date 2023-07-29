@@ -147,6 +147,20 @@ impl std::borrow::Borrow<str> for IString {
     }
 }
 
+#[cfg(feature = "serde")]
+impl serde::Serialize for IString {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        <str as serde::Serialize>::serialize(self, serializer)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for IString{
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        <String as serde::Deserialize>::deserialize(deserializer).map(IString::from)
+    }
+}
+
 #[cfg(test)]
 mod test_string {
     use super::*;
