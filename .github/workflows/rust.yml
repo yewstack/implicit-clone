@@ -2,11 +2,11 @@ name: Rust
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   schedule:
     - cron: 0 0 1 * *
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 env:
   CARGO_TERM_COLOR: always
@@ -21,14 +21,14 @@ jobs:
           - macos-latest
         rust:
           - stable
-          - 1.60.0
+          - 1.64.0
         include:
           - os: ubuntu-latest
             rust: stable
             lint: 1
           - rust: stable
             rust-args: --all-features
-          - rust: 1.60.0
+          - rust: 1.64.0
             rust-args: --all-features
     runs-on: ${{ matrix.os }}
     steps:
