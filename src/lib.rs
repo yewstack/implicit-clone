@@ -72,7 +72,7 @@ macro_rules! impl_implicit_clone_for_tuple {
     };
 }
 
-impl_implicit_clone_for_tuple!(T1, );
+impl_implicit_clone_for_tuple!(T1,);
 impl_implicit_clone_for_tuple!(T1, T2);
 impl_implicit_clone_for_tuple!(T1, T2, T3);
 impl_implicit_clone_for_tuple!(T1, T2, T3, T4);
