@@ -23,7 +23,7 @@
 //! - [`std::sync::Arc`][std::sync::Arc]
 //! - Tuples with 1-12 elements, all of which are also [`ImplicitClone`](crate::ImplicitClone)
 //! - [`Option`][std::option::Option], where inner value is [`ImplicitClone`](crate::ImplicitClone)
-//! - Some built-in [`Copy`][std::marker::Copy] types, like `()`, `bool`, etc.
+//! - Some built-in [`Copy`][std::marker::Copy] types, like `()`, `bool`, `&T`, etc.
 //!
 //! This crate is in the category `rust-patterns` but this is actually a Rust anti-pattern. In Rust
 //! the user should always handle borrowing and ownership by themselves. Nevertheless, this pattern
@@ -56,6 +56,8 @@ pub mod unsync;
 /// implementation instead.
 pub trait ImplicitClone: Clone {}
 
+impl<T: ?Sized> ImplicitClone for &T {}
+
 impl<T: ImplicitClone> ImplicitClone for Option<T> {}
 
 macro_rules! impl_implicit_clone {
@@ -71,7 +73,7 @@ impl_implicit_clone!(
     f32, f64,
     bool,
     usize, isize,
-    &'static str, char,
+    char,
     (),
 );
 
