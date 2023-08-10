@@ -7,25 +7,33 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 //! # ImplicitClone
 //!
-//! A library that introduces the marker trait [`ImplicitClone`](crate::ImplicitClone) which allows
-//! reproducing the behavior of the trait [`Copy`][std::marker::Copy] but calls the
-//! [`Clone`][std::clone::Clone] implementation instead and must be implemented in the host
-//! library.
+//! This library introduces the marker trait [`ImplicitClone`](crate::ImplicitClone) intended for
+//! cheap-to-clone types that should be allowed to be cloned implicitly. It enables host libraries
+//! using this crate to have the syntax of [`Copy`][std::marker::Copy] while actually calling the
+//! [`Clone`][std::clone::Clone] implementation instead (usually when host library does such syntax
+//! in a macro).
 //!
-//! The idea is that you must implement this trait on types that are cheap to clone
-//! ([`std::rc::Rc`][std::rc::Rc] and [`std::sync::Arc`][std::sync::Arc] types are
-//! automatically implemented). Then the host library must use the trait
-//! [`ImplicitClone`](crate::ImplicitClone) to allow their users to pass objects that will be
-//! cloned automatically.
+//! The idea is that you must implement this trait on your cheap-to-clone types, and then the host
+//! library using the trait will allow users to pass values of your types and they will be cloned
+//! automatically.
+//!
+//! Standard types that the [`ImplicitClone`](crate::ImplicitClone) is already implemented for:
+//! 
+//! - [`std::rc::Rc`][std::rc::Rc]
+//! - [`std::sync::Arc`][std::sync::Arc]
+//! - Tuples with 1-12 elements, all of which are also [`ImplicitClone`](crate::ImplicitClone)
+//! - [`Option`][std::option::Option], where inner value is [`ImplicitClone`](crate::ImplicitClone)
+//! - Some built-in [`Copy`][std::marker::Copy] types, like `()`, `bool`, etc.
 //!
 //! This crate is in the category `rust-patterns` but this is actually a Rust anti-pattern. In Rust
 //! the user should always handle borrowing and ownership by themselves. Nevertheless, this pattern
 //! is sometimes desirable. For example, UI frameworks that rely on propagating properties from
-//! ancestors to children will always need to use Rc'ed types to allow every child component to
-//! update. This is the case in React-like framework like Yew.
+//! ancestors to multiple children will always need to use `Rc`'d types to cheaply and concisely
+//! update every child component. This is the case in React-like frameworks like
+//! [Yew](https://yew.rs/).
 //!
-//! This crates also provide a few convenient immutable types for handling cheap-to-clone string,
-//! array and maps which you can find in the modules [`sync`](crate::sync) and
+//! This crates also provides a few convenient immutable types for handling cheap-to-clone strings,
+//! arrays and maps, you can find them in the modules [`sync`](crate::sync) and
 //! [`unsync`](crate::unsync). Those types implement [`ImplicitClone`](crate::ImplicitClone) and
 //! hold only types that implement [`ImplicitClone`](crate::ImplicitClone) as well. **One big
 //! particularity: iterating on these types yields clones of the items and not references.** This
@@ -35,16 +43,17 @@
 //! [std::clone::Clone]: https://doc.rust-lang.org/std/clone/trait.Clone.html
 //! [std::rc::Rc]: https://doc.rust-lang.org/std/rc/struct.Rc.html
 //! [std::sync::Arc]: https://doc.rust-lang.org/std/sync/struct.Arc.html
+//! [std::option::Option]: https://doc.rust-lang.org/stable/std/option/enum.Option.html
 
 /// Thread-safe version of immutable types.
 pub mod sync;
 /// Single-threaded version of immutable types.
 pub mod unsync;
 
-/// Marker trait for types that can be cloned implicitly.
+/// Marker trait for cheap-to-clone types that should be allowed to be cloned implicitly.
 ///
-/// Behaves exactly like [`Copy`] but calls the [`Clone`] implementation instead and must be
-/// implemented in the host library.
+/// Enables host libraries to have the same syntax as [`Copy`] while calling the [`Clone`]
+/// implementation instead.
 pub trait ImplicitClone: Clone {}
 
 impl<T: ImplicitClone> ImplicitClone for Option<T> {}
