@@ -18,7 +18,7 @@
 //! automatically.
 //!
 //! Standard types that the [`ImplicitClone`](crate::ImplicitClone) is already implemented for:
-//! 
+//!
 //! - [`std::rc::Rc`][std::rc::Rc]
 //! - [`std::sync::Arc`][std::sync::Arc]
 //! - Tuples with 1-12 elements, all of which are also [`ImplicitClone`](crate::ImplicitClone)
@@ -129,4 +129,80 @@ macro_rules! imap_deconstruct {
         )*
         )*
     };
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    fn host_library<T: ImplicitClone>(value: &T) -> T {
+        value.clone()
+    }
+
+    macro_rules! host_library {
+        ($a:expr) => {
+            host_library(&$a)
+        };
+    }
+
+    struct NonImplicitCloneType;
+
+    #[test]
+    fn custom() {
+        #[derive(Clone)]
+        struct ImplicitCloneType;
+
+        impl ImplicitClone for ImplicitCloneType {}
+
+        host_library!(ImplicitCloneType);
+    }
+
+    #[test]
+    fn copy_types() {
+        macro_rules! test_all {
+            ($($t:ty),* $(,)?) => {
+                $(host_library!(<$t>::default());)*
+            };
+        }
+
+        #[rustfmt::skip]
+        test_all!(
+            u8, u16, u32, u64, u128,
+            i8, i16, i32, i64, i128,
+            f32, f64,
+            bool,
+            usize, isize, char,
+            (),
+        );
+    }
+
+    #[test]
+    fn ref_type() {
+        host_library!(&NonImplicitCloneType);
+        // `host_library!(NonImplicitCloneType)` doesn't compile
+    }
+
+    #[test]
+    fn option() {
+        host_library!(Some("foo"));
+        // `host_library!(Some(NonImplicitCloneType));` doesn't compile
+    }
+
+    #[test]
+    fn tuples() {
+        host_library!((1,));
+        host_library!((1, 2));
+        host_library!((1, 2, 3));
+        host_library!((1, 2, 3, 4));
+        host_library!((1, 2, 3, 4, 5));
+        host_library!((1, 2, 3, 4, 5, 6));
+        host_library!((1, 2, 3, 4, 5, 6, 7));
+        host_library!((1, 2, 3, 4, 5, 6, 7, 8));
+        host_library!((1, 2, 3, 4, 5, 6, 7, 8, 9));
+        host_library!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
+        host_library!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
+        host_library!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12));
+        // `host_library!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13));` doesn't compile
+        // `host_library!((NonImplicitCloneType,));` doesn't compile
+    }
 }
