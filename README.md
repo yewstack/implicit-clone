@@ -34,7 +34,7 @@ ancestors to multiple children will always need to use `Rc`'d types to cheaply a
 update every child component. This is the case in React-like frameworks like
 [Yew](https://yew.rs/).
 
-This crates also provides a few convenient immutable types for handling cheap-to-clone strings,
+This crate also provides a few convenient immutable types for handling cheap-to-clone strings,
 arrays and maps, you can find them in the modules [`sync`](https://docs.rs/implicit-clone/latest/implicit_clone/sync/) and
 [`unsync`](https://docs.rs/implicit-clone/latest/implicit_clone/unsync/). Those types implement [`ImplicitClone`](https://docs.rs/implicit-clone/latest/implicit_clone/trait.ImplicitClone.html) and
 hold only types that implement [`ImplicitClone`](https://docs.rs/implicit-clone/latest/implicit_clone/trait.ImplicitClone.html) as well. **One big
