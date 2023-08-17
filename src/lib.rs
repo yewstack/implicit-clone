@@ -32,7 +32,7 @@
 //! update every child component. This is the case in React-like frameworks like
 //! [Yew](https://yew.rs/).
 //!
-//! This crates also provides a few convenient immutable types for handling cheap-to-clone strings,
+//! This crate also provides a few convenient immutable types for handling cheap-to-clone strings,
 //! arrays and maps, you can find them in the modules [`sync`](crate::sync) and
 //! [`unsync`](crate::unsync). Those types implement [`ImplicitClone`](crate::ImplicitClone) and
 //! hold only types that implement [`ImplicitClone`](crate::ImplicitClone) as well. **One big
