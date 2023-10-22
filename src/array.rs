@@ -42,6 +42,12 @@ impl<T: ImplicitClone + 'static> FromIterator<T> for IArray<T> {
     }
 }
 
+impl<T: ImplicitClone + 'static> Extend<T> for IArray<T> {
+    fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
+        self.insert_many(self.len(), iter);
+    }
+}
+
 impl<T: ImplicitClone + 'static> ImplicitClone for IArray<T> {}
 
 impl<T: ImplicitClone + 'static> From<&'static [T]> for IArray<T> {
@@ -160,6 +166,161 @@ impl<T: ImplicitClone + 'static> IArray<T> {
             Self::Rc(a) => a.get(index).cloned(),
         }
     }
+
+    /// Makes a mutable reference into the array.
+    ///
+    /// If this array is an `Rc` with no other strong or weak references, returns
+    /// a mutable slice of the contained data without any cloning. Otherwise, it clones the
+    /// data into a new array and returns a mutable slice into that.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use implicit_clone::unsync::*;
+    /// # use std::rc::Rc;
+    /// // This will reuse the Rc storage
+    /// let mut v1 = IArray::<u8>::Rc(Rc::new([1,2,3]));
+    /// v1.make_mut()[1] = 123;
+    /// assert_eq!(&[1,123,3], v1.as_slice());
+    ///
+    /// // This will create a new copy
+    /// let mut v2 = IArray::<u8>::Static(&[1,2,3]);
+    /// v2.make_mut()[1] = 123;
+    /// assert_eq!(&[1,123,3], v2.as_slice());
+    /// ```
+    #[inline]
+    pub fn make_mut(&mut self) -> &mut [T] {
+        // This code is somewhat weirdly written to work around https://github.com/rust-lang/rust/issues/54663 -
+        // we can't just check if this is an Rc with one reference with get_mut in an if branch and copy otherwise,
+        // since returning the mutable slice extends its lifetime for the rest of the function.
+        match self {
+            Self::Rc(ref mut rc) => {
+                if Rc::get_mut(rc).is_none() {
+                    *rc = rc.iter().cloned().collect::<Rc<[T]>>();
+                }
+                Rc::get_mut(rc).unwrap()
+            }
+            Self::Static(slice) => {
+                *self = Self::Rc(slice.iter().cloned().collect());
+                match self {
+                    Self::Rc(rc) => Rc::get_mut(rc).unwrap(),
+                    _ => unreachable!(),
+                }
+            }
+        }
+    }
+
+    /// Inserts several objects into the array.
+    ///
+    /// This overwrites `self` to a new refcounted array with clones of the previous items,
+    /// with items from the `values` iterator inserted starting at the specified index, shifting
+    /// later items down.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the index is greater than one more than the length of the array.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use implicit_clone::unsync::*;
+    /// let mut v = IArray::<u8>::Static(&[1,2,6]);
+    /// v.insert_many(2, [3,4,5]);
+    /// assert_eq!(&[1,2,3,4,5,6], v.as_slice());
+    /// ```
+    pub fn insert_many<I: IntoIterator<Item = T>>(&mut self, index: usize, values: I) {
+        let head = self.as_slice()[..index].iter().cloned();
+        let tail = self.as_slice()[index..].iter().cloned();
+        let rc = head.chain(values).chain(tail).collect();
+        *self = Self::Rc(rc);
+    }
+
+    /// Inserts an object into the array.
+    ///
+    /// This overwrites `self` to a new refcounted array with clones of the previous items,
+    /// with `value` inserted at the `index`, shifting later items down.
+    ///
+    /// [`Self::insert_many`] will be more efficient if inserting multiple items.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the index is greater than one more than the length of the array.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use implicit_clone::unsync::*;
+    /// let mut v = IArray::<u8>::Static(&[1,2,4]);
+    /// v.insert(2, 3);
+    /// assert_eq!(&[1,2,3,4], v.as_slice());
+    /// ```
+    pub fn insert(&mut self, index: usize, value: T) {
+        self.insert_many(index, std::iter::once(value));
+    }
+
+    /// Adds an object to the end of the array.
+    ///
+    /// This overwrites `self` to a new refcounted array with clones of the previous items,
+    /// with `value` added at the end.
+    ///
+    /// [`Self::extend`] will be more efficient if inserting multiple items.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use implicit_clone::unsync::*;
+    /// let mut v = IArray::<u8>::Static(&[1,2,3]);
+    /// v.push(4);
+    /// assert_eq!(&[1,2,3,4], v.as_slice());
+    /// ```
+    pub fn push(&mut self, value: T) {
+        self.insert(self.len(), value);
+    }
+
+    /// Removes a range of items from the array.
+    ///
+    /// This overwrites `self` to a new refcounted array with clones of the previous items, excluding
+    /// the items covered by `range`, with later items shifted up.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the range is out of bounds.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use implicit_clone::unsync::*;
+    /// let mut v = IArray::<u8>::Static(&[1,2,10,20,3]);
+    /// v.remove_range(2..4);
+    /// assert_eq!(&[1,2,3], v.as_slice());
+    /// ```
+    pub fn remove_range(&mut self, range: std::ops::Range<usize>) {
+        let head = self.as_slice()[..range.start].iter().cloned();
+        let tail = self.as_slice()[range.end..].iter().cloned();
+        let rc = head.chain(tail).collect();
+        *self = Self::Rc(rc);
+    }
+
+    /// Removes an item from the array.
+    ///
+    /// This overwrites `self` to a new refcounted array with clones of the previous items, excluding
+    /// the items at `index`, with later items shifted up.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the index is out of bounds.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use implicit_clone::unsync::*;
+    /// let mut v = IArray::<u8>::Static(&[1,2,10,3]);
+    /// v.remove(2);
+    /// assert_eq!(&[1,2,3], v.as_slice());
+    /// ```
+    pub fn remove(&mut self, index: usize) {
+        self.remove_range(index..index + 1)
+    }
 }
 
 impl<'a, T, U, const N: usize> PartialEq<&'a [U; N]> for IArray<T>
@@ -275,5 +436,12 @@ mod test_array {
     fn floats_in_array() {
         const _ARRAY_F32: IArray<f32> = IArray::Static(&[]);
         const _ARRAY_F64: IArray<f64> = IArray::Static(&[]);
+    }
+
+    #[test]
+    fn extend() {
+        let mut array = [1, 2, 3].into_iter().collect::<IArray<u32>>();
+        array.extend([4, 5, 6]);
+        assert_eq!(&[1, 2, 3, 4, 5, 6], array.as_slice());
     }
 }
