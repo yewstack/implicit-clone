@@ -3,7 +3,13 @@ use indexmap::map::Keys as MapKeys;
 use indexmap::map::Values as MapValues;
 use indexmap::IndexMap as Map;
 use std::borrow::Borrow;
+use std::fmt;
 use std::hash::Hash;
+
+use crate::ImplicitClone;
+
+use super::IString;
+use super::Rc;
 
 /// An immutable hash map type inspired by [Immutable.js](https://immutable-js.com/).
 ///
@@ -346,7 +352,7 @@ where
                 for (k, v) in a.iter() {
                     seq.serialize_entry(k, v)?;
                 }
-            },
+            }
             Self::Rc(a) => {
                 for (k, v) in a.iter() {
                     seq.serialize_entry(k, v)?;

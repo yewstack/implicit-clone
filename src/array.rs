@@ -1,3 +1,8 @@
+use std::fmt;
+
+use super::Rc;
+use crate::ImplicitClone;
+
 /// An immutable array type inspired by [Immutable.js](https://immutable-js.com/).
 ///
 /// This type is cheap to clone and thus implements [`ImplicitClone`]. It can be created based on a

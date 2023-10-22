@@ -1,7 +1,11 @@
 use std::borrow::Cow;
 use std::cmp::Ordering;
-use std::fmt::Debug;
+use std::fmt::{self, Debug};
 use std::str::FromStr;
+
+use crate::ImplicitClone;
+
+use super::Rc;
 
 /// An immutable string type inspired by [Immutable.js](https://immutable-js.com/).
 ///
