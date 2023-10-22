@@ -126,7 +126,14 @@ impl Ord for IString {
     }
 }
 
-impl_cmp_as_str!(PartialOrd::<IString, IString>);
+// Manual implementation of PartialOrd that uses Ord to ensure it is consistent, as
+// recommended by clippy.
+impl PartialOrd for IString {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
 impl_cmp_as_str!(PartialOrd::<IString, str>);
 impl_cmp_as_str!(PartialOrd::<str, IString>);
 impl_cmp_as_str!(PartialOrd::<IString, &str>);
