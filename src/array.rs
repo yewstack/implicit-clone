@@ -165,6 +165,81 @@ impl<T: ImplicitClone + 'static> IArray<T> {
             Self::Rc(a) => a.get(index).cloned(),
         }
     }
+
+    /// Gets a mutable reference into the array, if there are no other references.
+    ///
+    /// If this array is an `Rc` with no other strong or weak references, returns
+    /// a mutable slice of the contained data without any cloning. Otherwise returns
+    /// `None`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use implicit_clone::unsync::*;
+    /// # use std::rc::Rc;
+    /// // This will reuse the Rc storage
+    /// let mut v1 = IArray::<u8>::Rc(Rc::new([1,2,3]));
+    /// v1.get_mut().unwrap()[1] = 123;
+    /// assert_eq!(&[1,123,3], v1.as_slice());
+    ///
+    /// // Another reference will prevent exclusive access
+    /// let v2 = v1.clone();
+    /// assert!(v1.get_mut().is_none());
+    ///
+    /// // Static references are immutable
+    /// let mut v3 = IArray::<u8>::Static(&[1,2,3]);
+    /// assert!(v3.get_mut().is_none());
+    /// ```
+    #[inline]
+    pub fn get_mut(&mut self) -> Option<&mut [T]> {
+        match self {
+            Self::Rc(ref mut rc) => Rc::get_mut(rc),
+            Self::Static(_) => None,
+        }
+    }
+
+    /// Makes a mutable reference into the array.
+    ///
+    /// If this array is an `Rc` with no other strong or weak references, returns
+    /// a mutable slice of the contained data without any cloning. Otherwise, it clones the
+    /// data into a new array and returns a mutable slice into that.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use implicit_clone::unsync::*;
+    /// # use std::rc::Rc;
+    /// // This will reuse the Rc storage
+    /// let mut v1 = IArray::<u8>::Rc(Rc::new([1,2,3]));
+    /// v1.make_mut()[1] = 123;
+    /// assert_eq!(&[1,123,3], v1.as_slice());
+    ///
+    /// // This will create a new copy
+    /// let mut v2 = IArray::<u8>::Static(&[1,2,3]);
+    /// v2.make_mut()[1] = 123;
+    /// assert_eq!(&[1,123,3], v2.as_slice());
+    /// ```
+    #[inline]
+    pub fn make_mut(&mut self) -> &mut [T] {
+        // This code is somewhat weirdly written to work around https://github.com/rust-lang/rust/issues/54663 -
+        // we can't just check if this is an Rc with one reference with get_mut in an if branch and copy otherwise,
+        // since returning the mutable slice extends its lifetime for the rest of the function.
+        match self {
+            Self::Rc(ref mut rc) => {
+                if Rc::get_mut(rc).is_none() {
+                    *rc = rc.iter().cloned().collect::<Rc<[T]>>();
+                }
+                Rc::get_mut(rc).unwrap()
+            }
+            Self::Static(slice) => {
+                *self = Self::Rc(slice.iter().cloned().collect());
+                match self {
+                    Self::Rc(rc) => Rc::get_mut(rc).unwrap(),
+                    _ => unreachable!(),
+                }
+            }
+        }
+    }
 }
 
 impl<'a, T, U, const N: usize> PartialEq<&'a [U; N]> for IArray<T>
