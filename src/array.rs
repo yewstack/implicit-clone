@@ -205,6 +205,10 @@ impl<T: ImplicitClone + 'static> IArray<T> {
     /// // Static references are immutable
     /// let mut v3 = IArray::<u8>::Static(&[1,2,3]);
     /// assert!(v3.get_mut().is_none());
+    ///
+    /// // Single items always return a mutable reference
+    /// let mut v4 = IArray::<u8>::Single([1]);
+    /// assert!(v4.get_mut().is_some());
     /// ```
     #[inline]
     pub fn get_mut(&mut self) -> Option<&mut [T]> {
