@@ -71,12 +71,6 @@ impl<T: ImplicitClone + 'static> From<Rc<[T]>> for IArray<T> {
     }
 }
 
-impl<T: ImplicitClone + 'static> From<T> for IArray<T> {
-    fn from(x: T) -> IArray<T> {
-        IArray::Single([x])
-    }
-}
-
 impl<T: ImplicitClone + 'static> From<[T; 1]> for IArray<T> {
     fn from(a: [T; 1]) -> IArray<T> {
         IArray::Single(a)
@@ -398,7 +392,6 @@ mod test_array {
         let _array: IArray<u32> = IArray::from(&[1, 2, 3][..]);
         let _array: IArray<u32> = IArray::from(vec![1, 2, 3]);
         let _array: IArray<u32> = IArray::from(Rc::from(vec![1, 2, 3]));
-        let _array: IArray<u32> = IArray::from(1);
         let _array: IArray<u32> = IArray::from([1]);
     }
 }
