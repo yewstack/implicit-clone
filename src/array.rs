@@ -399,14 +399,12 @@ mod test_array {
 
     #[test]
     fn from() {
-<<<<<<< HEAD
+        let x: IArray<u32> = IArray::Static(&[]);
+        let _out = IArray::from(&x);
+
         let _array: IArray<u32> = IArray::from(&[1, 2, 3][..]);
         let _array: IArray<u32> = IArray::from(vec![1, 2, 3]);
         let _array: IArray<u32> = IArray::from(Rc::from(vec![1, 2, 3]));
         let _array: IArray<u32> = IArray::from([1]);
-=======
-        let x: IArray<u32> = IArray::Static(&[]);
-        let _out = IArray::from(&x);
->>>>>>> ac2980922528800310ba333512fa6368ce02410f
     }
 }
