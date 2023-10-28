@@ -216,7 +216,8 @@ impl<T: ImplicitClone + 'static> IArray<T> {
     pub fn get_mut(&mut self) -> Option<&mut [T]> {
         match self {
             Self::Rc(ref mut rc) => Rc::get_mut(rc),
-            Self::Static(_) | Self::Single(_) => None,
+            Self::Static(_) => None,
+            Self::Single(ref mut a) => Some(a),
         }
     }
 
