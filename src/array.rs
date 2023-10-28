@@ -67,6 +67,12 @@ impl<T: ImplicitClone + 'static> From<Rc<[T]>> for IArray<T> {
     }
 }
 
+impl<T: ImplicitClone + 'static> From<&IArray<T>> for IArray<T> {
+    fn from(a: &IArray<T>) -> IArray<T> {
+        a.clone()
+    }
+}
+
 impl<T: ImplicitClone + 'static> IArray<T> {
     /// Returns an iterator over the slice.
     ///
@@ -280,5 +286,11 @@ mod test_array {
     fn floats_in_array() {
         const _ARRAY_F32: IArray<f32> = IArray::Static(&[]);
         const _ARRAY_F64: IArray<f64> = IArray::Static(&[]);
+    }
+
+    #[test]
+    fn from() {
+        let x: IArray<u32> = IArray::Static(&[]);
+        let _out = IArray::from(&x);
     }
 }

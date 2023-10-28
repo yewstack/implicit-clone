@@ -96,6 +96,12 @@ impl From<Cow<'static, str>> for IString {
     }
 }
 
+impl From<&IString> for IString {
+    fn from(s: &IString) -> IString {
+        s.clone()
+    }
+}
+
 macro_rules! impl_cmp_as_str {
     (PartialEq::<$type1:ty, $type2:ty>) => {
         impl_cmp_as_str!(PartialEq::<$type1, $type2>::eq -> bool);
@@ -393,5 +399,11 @@ mod test_string {
 
         // this assert exists to ensure the cow lives after the strong_count assert
         assert_eq!(cow, "foo");
+    }
+
+    #[test]
+    fn from_ref() {
+        let s = IString::Static("foo");
+        let _out = IString::from(&s);
     }
 }
