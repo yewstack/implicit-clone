@@ -99,6 +99,14 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
     }
 }
 
+impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static>
+    From<&IMap<K, V>> for IMap<K, V>
+{
+    fn from(a: &IMap<K, V>) -> IMap<K, V> {
+        a.clone()
+    }
+}
+
 impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static> IMap<K, V> {
     /// Return an iterator over the key-value pairs of the map, in their order.
     #[inline]
@@ -424,5 +432,11 @@ mod test_map {
     fn floats_in_map() {
         const _MAP_F32: IMap<u32, f32> = IMap::Static(&[]);
         const _MAP_F64: IMap<u32, f64> = IMap::Static(&[]);
+    }
+
+    #[test]
+    fn from() {
+        let x: IMap<u32, u32> = IMap::Static(&[]);
+        let _out = IMap::from(&x);
     }
 }
