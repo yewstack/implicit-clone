@@ -13,6 +13,8 @@ pub enum IArray<T: ImplicitClone + 'static> {
     Static(&'static [T]),
     /// A reference counted slice.
     Rc(Rc<[T]>),
+    /// A single element.
+    Single([T; 1]),
 }
 
 // TODO add insta tests
@@ -21,6 +23,7 @@ impl<T: fmt::Debug + ImplicitClone + 'static> fmt::Debug for IArray<T> {
         match self {
             Self::Static(a) => a.fmt(f),
             Self::Rc(a) => a.fmt(f),
+            Self::Single(x) => x.fmt(f),
         }
     }
 }
@@ -30,6 +33,7 @@ impl<T: ImplicitClone + 'static> Clone for IArray<T> {
         match self {
             Self::Static(a) => Self::Static(a),
             Self::Rc(a) => Self::Rc(a.clone()),
+            Self::Single(x) => Self::Single(x.clone()),
         }
     }
 }
@@ -73,6 +77,12 @@ impl<T: ImplicitClone + 'static> From<&IArray<T>> for IArray<T> {
     }
 }
 
+impl<T: ImplicitClone + 'static> From<[T; 1]> for IArray<T> {
+    fn from(a: [T; 1]) -> IArray<T> {
+        IArray::Single(a)
+    }
+}
+
 impl<T: ImplicitClone + 'static> IArray<T> {
     /// Returns an iterator over the slice.
     ///
@@ -93,6 +103,7 @@ impl<T: ImplicitClone + 'static> IArray<T> {
         match self {
             Self::Static(a) => a.iter().cloned(),
             Self::Rc(a) => a.iter().cloned(),
+            Self::Single(a) => a.iter().cloned(),
         }
     }
 
@@ -111,6 +122,7 @@ impl<T: ImplicitClone + 'static> IArray<T> {
         match self {
             Self::Static(a) => a.len(),
             Self::Rc(a) => a.len(),
+            Self::Single(_) => 1,
         }
     }
 
@@ -131,6 +143,7 @@ impl<T: ImplicitClone + 'static> IArray<T> {
         match self {
             Self::Static(a) => a.is_empty(),
             Self::Rc(a) => a.is_empty(),
+            Self::Single(_) => false,
         }
     }
 
@@ -151,6 +164,7 @@ impl<T: ImplicitClone + 'static> IArray<T> {
         match self {
             Self::Static(a) => a,
             Self::Rc(a) => a,
+            Self::Single(a) => a,
         }
     }
 
@@ -169,6 +183,8 @@ impl<T: ImplicitClone + 'static> IArray<T> {
         match self {
             Self::Static(a) => a.get(index).cloned(),
             Self::Rc(a) => a.get(index).cloned(),
+            Self::Single(a) if index == 0 => Some(a[0].clone()),
+            Self::Single(_) => None,
         }
     }
 
@@ -195,12 +211,17 @@ impl<T: ImplicitClone + 'static> IArray<T> {
     /// // Static references are immutable
     /// let mut v3 = IArray::<u8>::Static(&[1,2,3]);
     /// assert!(v3.get_mut().is_none());
+    ///
+    /// // Single items always return a mutable reference
+    /// let mut v4 = IArray::<u8>::Single([1]);
+    /// assert!(v4.get_mut().is_some());
     /// ```
     #[inline]
     pub fn get_mut(&mut self) -> Option<&mut [T]> {
         match self {
             Self::Rc(ref mut rc) => Rc::get_mut(rc),
             Self::Static(_) => None,
+            Self::Single(ref mut a) => Some(a),
         }
     }
 
@@ -244,6 +265,13 @@ impl<T: ImplicitClone + 'static> IArray<T> {
                     _ => unreachable!(),
                 }
             }
+            Self::Single(slice) => {
+                *self = Self::Rc(slice.iter().cloned().collect());
+                match self {
+                    Self::Rc(rc) => Rc::get_mut(rc).unwrap(),
+                    _ => unreachable!(),
+                }
+            }
         }
     }
 }
@@ -256,6 +284,8 @@ where
         match self {
             Self::Static(a) => a.eq(other),
             Self::Rc(a) => a.eq(*other),
+            Self::Single(a) if N == 1 => a[0].eq(&other[0]),
+            Self::Single(_) => false,
         }
     }
 }
@@ -268,6 +298,8 @@ where
         match self {
             Self::Static(a) => a.eq(other),
             Self::Rc(a) => a.eq(other),
+            Self::Single(a) if N == 1 => a[0].eq(&other[0]),
+            Self::Single(_) => false,
         }
     }
 }
@@ -280,6 +312,7 @@ where
         match self {
             Self::Static(a) => a.eq(&other),
             Self::Rc(a) => a.eq(other),
+            Self::Single(a) => a.eq(other),
         }
     }
 }
@@ -292,6 +325,7 @@ where
         match self {
             Self::Static(a) => a.eq(other),
             Self::Rc(a) => a.eq(*other),
+            Self::Single(a) => a.eq(*other),
         }
     }
 }
@@ -367,5 +401,10 @@ mod test_array {
     fn from() {
         let x: IArray<u32> = IArray::Static(&[]);
         let _out = IArray::from(&x);
+
+        let _array: IArray<u32> = IArray::from(&[1, 2, 3][..]);
+        let _array: IArray<u32> = IArray::from(vec![1, 2, 3]);
+        let _array: IArray<u32> = IArray::from(Rc::from(vec![1, 2, 3]));
+        let _array: IArray<u32> = IArray::from([1]);
     }
 }
