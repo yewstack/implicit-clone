@@ -132,6 +132,41 @@ macro_rules! imap_deconstruct {
     };
 }
 
+/// A macro to help with destructuring structs by cloning its field.
+///
+/// This macro works very similarly to the built-in syntax for struct destructuring but it has 2
+/// major quality-of-life improvements:
+///
+/// 1. The fields are cloned individually instead of cloning the whole struct.
+/// 2. The type of the struct is not needed for destructuring.
+///
+/// ```rust
+/// # use implicit_clone::unstruct;
+/// # #[derive(Clone)]
+/// # struct Struct { x: u32, y: u32 }
+/// let s = Struct { x: 5, y: 6 };
+///
+/// // built-in struct destructuring
+/// let Struct { x, y } = s.clone();
+/// assert_eq!(x, 5);
+/// assert_eq!(y, 6);
+///
+/// // unstruct
+/// unstruct! {
+///   let { x, y } = s;
+/// }
+/// assert_eq!(x, 5);
+/// assert_eq!(y, 6);
+/// ```
+///
+/// Renaming field is not supported by this macro.
+#[macro_export]
+macro_rules! unstruct {
+    (let { $($field:ident),* $(,)? } = $struct:expr;) => {
+        $(let $field = $struct.$field.clone();)*
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
