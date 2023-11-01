@@ -83,6 +83,28 @@ impl<T: ImplicitClone + 'static> From<[T; 1]> for IArray<T> {
     }
 }
 
+#[derive(Debug)]
+pub struct Iter<T: ImplicitClone + 'static> {
+    array: IArray<T>,
+    index: usize,
+}
+
+impl<T: ImplicitClone + 'static> Iter<T> {
+    fn new(array: IArray<T>) -> Self {
+        Self { array, index: 0 }
+    }
+}
+
+impl<T: ImplicitClone + 'static> Iterator for Iter<T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let item = self.array.get(self.index);
+        self.index += 1;
+        item
+    }
+}
+
 impl<T: ImplicitClone + 'static> IArray<T> {
     /// Returns an iterator over the slice.
     ///
@@ -99,12 +121,8 @@ impl<T: ImplicitClone + 'static> IArray<T> {
     /// assert_eq!(iterator.next(), None);
     /// ```
     #[inline]
-    pub fn iter(&self) -> impl Iterator<Item = T> + '_ {
-        match self {
-            Self::Static(a) => a.iter().cloned(),
-            Self::Rc(a) => a.iter().cloned(),
-            Self::Single(a) => a.iter().cloned(),
-        }
+    pub fn iter(&self) -> Iter<T> {
+        Iter::new(self.clone())
     }
 
     /// Returns the number of elements in the vector, also referred to
