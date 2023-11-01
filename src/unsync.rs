@@ -10,9 +10,9 @@ mod map;
 #[path = "string.rs"]
 mod string;
 
-pub use array::IArray;
+pub use array::*;
 #[cfg(feature = "map")]
-pub use map::IMap;
-pub use string::IString;
+pub use map::*;
+pub use string::*;
 
 impl<T: ?Sized> ImplicitClone for Rc<T> {}

@@ -83,6 +83,7 @@ impl<T: ImplicitClone + 'static> From<[T; 1]> for IArray<T> {
     }
 }
 
+/// An iterator over the elements of an `IArray`.
 #[derive(Debug)]
 pub struct Iter<T: ImplicitClone + 'static> {
     array: IArray<T>,
