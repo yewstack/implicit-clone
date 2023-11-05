@@ -54,9 +54,9 @@
 //! macro_rules! html_input {
 //!     (<input $(type={$ty:expr})? $(name={$name:expr})? $(value={$value:expr})?>) => {{
 //!         let mut input = Input::new();
-//!         $(input.set_type($ty);)*
-//!         $(input.set_name($name);)*
-//!         $(input.set_value($value);)*
+//!         $(input.type = $ty.clone().into();)*
+//!         $(input.name.replace($name.clone().into());)*
+//!         $(input.value.replace($value.clone().into());)*
 //!         input
 //!     }}
 //! }
@@ -78,18 +78,6 @@
 //!             value: None,
 //!         }
 //!     }
-//!
-//!     pub fn set_type(&mut self, ty: impl Into<IString>) {
-//!         self.ty = ty.into();
-//!     }
-//!
-//!     pub fn set_name(&mut self, name: impl Into<IString>) {
-//!         self.name.replace(name.into());
-//!     }
-//!
-//!     pub fn set_value(&mut self, value: impl Into<IString>) {
-//!         self.value.replace(value.into());
-//!     }
 //! }
 //!
 //! impl std::fmt::Display for Input {
@@ -108,9 +96,12 @@
 //! // In the user's source code:
 //!
 //! let age = IString::from(20.to_string());
-//! let input = html_input!(<input type={"text"} name={"age"} value={&age}>);
+//! // `age` is implicitly cloned to the 2 different inputs
+//! let input1 = html_input!(<input name={"age"} value={age}>);
+//! let input2 = html_input!(<input name={"age"} value={age}>);
 //!
-//! assert_eq!(input.to_string(), r#"<input type="text" name="age" value="20">"#);
+//! assert_eq!(input1.to_string(), r#"<input type="text" name="age" value="20">"#);
+//! assert_eq!(input2.to_string(), r#"<input type="text" name="age" value="20">"#);
 //! ```
 //!
 //! [std::marker::Copy]: https://doc.rust-lang.org/std/marker/trait.Copy.html
