@@ -230,8 +230,12 @@ mod test {
 
         impl ImplicitClone for ImplicitCloneType {}
 
-        fn assert_implicit_clone<T: ImplicitClone>(value: &T) -> T {
-            value.clone()
+        #[allow(dead_code)]
+        fn assert_ok() {
+            fn assert_implicit_clone<T: ImplicitClone>(value: &T) -> T {
+                unreachable!()
+            }
+            assert_implicit_clone(&ImplicitCloneType);
         }
     }
 
