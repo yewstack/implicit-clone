@@ -95,10 +95,11 @@
 //!
 //! // In the user's source code:
 //!
+//! let name = IString::Static("age");
 //! let age = IString::from(20.to_string());
-//! // `age` is implicitly cloned to the 2 different inputs
-//! let input1 = html_input!(<input name={"age"} value={age}>);
-//! let input2 = html_input!(<input name={"age"} value={age}>);
+//! // `name` and `age` are implicitly cloned to the 2 different inputs
+//! let input1 = html_input!(<input name={name} value={age}>);
+//! let input2 = html_input!(<input name={name} value={age}>);
 //!
 //! assert_eq!(input1.to_string(), r#"<input type="text" name="age" value="20">"#);
 //! assert_eq!(input2.to_string(), r#"<input type="text" name="age" value="20">"#);
