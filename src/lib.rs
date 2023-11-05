@@ -139,7 +139,7 @@ mod test {
     use super::*;
 
     fn host_library<T: ImplicitClone + Copy>(value: &T) -> T {
-        value.clone()
+        *value
     }
 
     macro_rules! host_library {
