@@ -213,7 +213,6 @@ mod test {
     #[test]
     fn option() {
         assert_implicit_clone!(Some("foo"));
-        // `assert_implicit_clone!(Some(NonImplicitCloneType));` doesn't compile
     }
 
     #[test]
@@ -231,6 +230,5 @@ mod test {
         assert_implicit_clone!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
         assert_implicit_clone!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12));
         // `assert_implicit_clone!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13));` doesn't compile
-        // `assert_implicit_clone!((NonImplicitCloneType,));` doesn't compile
     }
 }
