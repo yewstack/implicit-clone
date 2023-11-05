@@ -223,7 +223,7 @@ mod test {
 
         #[allow(dead_code)]
         fn assert_ok() {
-            fn assert_implicit_clone<T: ImplicitClone>(value: &T) -> T {
+            fn assert_implicit_clone<T: ImplicitClone>(_value: &T) -> T {
                 unreachable!()
             }
             assert_implicit_clone(&ImplicitCloneType);
