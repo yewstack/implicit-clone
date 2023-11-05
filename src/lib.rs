@@ -138,23 +138,13 @@ macro_rules! imap_deconstruct {
 mod test {
     use super::*;
 
-    fn assert_implicit_clone<T: ImplicitClone>(value: &T) -> T {
-        value.clone()
-    }
-
-    fn assert_copy<T: Copy>(value: &T) -> T {
+    fn assert_implicit_clone<T: ImplicitClone + Copy>(value: &T) -> T {
         *value
     }
 
     macro_rules! assert_implicit_clone {
         ($a:expr) => {
             assert_implicit_clone(&$a)
-        };
-    }
-
-    macro_rules! assert_copy {
-        ($a:expr) => {
-            assert_copy(&$a)
         };
     }
 
@@ -167,7 +157,9 @@ mod test {
 
         impl ImplicitClone for ImplicitCloneType {}
 
-        assert_implicit_clone!(ImplicitCloneType);
+        fn assert_implicit_clone<T: ImplicitClone>(value: &T) -> T {
+            value.clone()
+        }
     }
 
     #[test]
@@ -175,7 +167,6 @@ mod test {
         macro_rules! test_all {
             ($($t:ty),* $(,)?) => {
                 $(assert_implicit_clone!(<$t>::default());)*
-                $(assert_copy!(<$t>::default());)*
             };
         }
 
@@ -194,7 +185,6 @@ mod test {
         macro_rules! test_all_with_value {
             ($($t:ty => $v:expr),* $(,)?) => {
                 $(assert_implicit_clone!($v);)*
-                $(assert_copy!($v);)*
             };
         }
 
