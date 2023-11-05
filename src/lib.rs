@@ -138,7 +138,7 @@ macro_rules! imap_deconstruct {
 mod test {
     use super::*;
 
-    fn host_library<T: ImplicitClone>(value: &T) -> T {
+    fn host_library<T: ImplicitClone + Copy>(value: &T) -> T {
         value.clone()
     }
 
@@ -152,7 +152,7 @@ mod test {
 
     #[test]
     fn custom() {
-        #[derive(Clone)]
+        #[derive(Clone, Copy)]
         struct ImplicitCloneType;
 
         impl ImplicitClone for ImplicitCloneType {}
