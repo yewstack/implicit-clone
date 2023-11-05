@@ -78,6 +78,8 @@ impl_implicit_clone!(
     (),
 );
 
+impl<const N: usize, T: ImplicitClone> ImplicitClone for [T; N] {}
+
 macro_rules! impl_implicit_clone_for_tuple {
     ($($param:ident),+ $(,)?) => {
         impl<$($param: ImplicitClone),+> ImplicitClone for ($($param,)+) {}
@@ -174,6 +176,19 @@ mod test {
             bool,
             usize, isize, char,
             (),
+            [u8; 4],
+            &[u8],
+        );
+
+        macro_rules! test_all_with_value {
+            ($($t:ty => $v:expr),* $(,)?) => {
+                $(host_library!($v);)*
+            };
+        }
+
+        #[rustfmt::skip]
+        test_all_with_value!(
+            &[u8; 4] => &[0, 1, 2, 3],
         );
     }
 
