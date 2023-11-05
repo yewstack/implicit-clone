@@ -40,6 +40,79 @@
 //! particularity: iterating on these types yields clones of the items and not references.** This
 //! can be particularly handy when using a React-like framework.
 //!
+//! ## Example
+//!
+//! As an example, here is an implementation of a macro called `html_input! {}` which allows its
+//! user to build an `<input>` HTML node:
+//!
+//! ```
+//! // In the host library source code:
+//!
+//! use implicit_clone::ImplicitClone;
+//! use implicit_clone::unsync::IString;
+//!
+//! macro_rules! html_input {
+//!     (<input $(type={$ty:expr})? $(name={$name:expr})? $(value={$value:expr})?>) => {{
+//!         let mut input = Input::new();
+//!         $(input.set_type($ty);)*
+//!         $(input.set_name($name);)*
+//!         $(input.set_value($value);)*
+//!         input
+//!     }}
+//! }
+//!
+//! #[derive(Clone)]
+//! pub struct Input {
+//!     ty: IString,
+//!     name: Option<IString>,
+//!     value: Option<IString>,
+//! }
+//!
+//! impl ImplicitClone for Input {}
+//!
+//! impl Input {
+//!     pub fn new() -> Self {
+//!         Self {
+//!             ty: IString::Static("text"),
+//!             name: None,
+//!             value: None,
+//!         }
+//!     }
+//!
+//!     pub fn set_type(&mut self, ty: impl Into<IString>) {
+//!         self.ty = ty.into();
+//!     }
+//!
+//!     pub fn set_name(&mut self, name: impl Into<IString>) {
+//!         self.name.replace(name.into());
+//!     }
+//!
+//!     pub fn set_value(&mut self, value: impl Into<IString>) {
+//!         self.value.replace(value.into());
+//!     }
+//! }
+//!
+//! impl std::fmt::Display for Input {
+//!     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//!         write!(f, "<input type=\"{}\"", self.ty)?;
+//!         if let Some(name) = self.name.as_ref() {
+//!             write!(f, " name=\"{}\"", name)?;
+//!         }
+//!         if let Some(value) = self.value.as_ref() {
+//!             write!(f, " value=\"{}\"", value)?;
+//!         }
+//!         write!(f, ">")
+//!     }
+//! }
+//!
+//! // In the user's source code:
+//!
+//! let age = IString::from(20.to_string());
+//! let input = html_input!(<input type={"text"} name={"age"} value={&age}>);
+//!
+//! assert_eq!(input.to_string(), r#"<input type="text" name="age" value="20">"#);
+//! ```
+//!
 //! [std::marker::Copy]: https://doc.rust-lang.org/std/marker/trait.Copy.html
 //! [std::clone::Clone]: https://doc.rust-lang.org/std/clone/trait.Clone.html
 //! [std::rc::Rc]: https://doc.rust-lang.org/std/rc/struct.Rc.html
