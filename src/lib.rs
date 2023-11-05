@@ -138,13 +138,23 @@ macro_rules! imap_deconstruct {
 mod test {
     use super::*;
 
-    fn host_library<T: ImplicitClone + Copy>(value: &T) -> T {
+    fn assert_implicit_clone<T: ImplicitClone>(value: &T) -> T {
+        value.clone()
+    }
+
+    fn assert_copy<T: Copy>(value: &T) -> T {
         *value
     }
 
-    macro_rules! host_library {
+    macro_rules! assert_implicit_clone {
         ($a:expr) => {
-            host_library(&$a)
+            assert_implicit_clone(&$a)
+        };
+    }
+
+    macro_rules! assert_copy {
+        ($a:expr) => {
+            assert_copy(&$a)
         };
     }
 
@@ -152,19 +162,20 @@ mod test {
 
     #[test]
     fn custom() {
-        #[derive(Clone, Copy)]
+        #[derive(Clone)]
         struct ImplicitCloneType;
 
         impl ImplicitClone for ImplicitCloneType {}
 
-        host_library!(ImplicitCloneType);
+        assert_implicit_clone!(ImplicitCloneType);
     }
 
     #[test]
     fn copy_types() {
         macro_rules! test_all {
             ($($t:ty),* $(,)?) => {
-                $(host_library!(<$t>::default());)*
+                $(assert_implicit_clone!(<$t>::default());)*
+                $(assert_copy!(<$t>::default());)*
             };
         }
 
@@ -182,7 +193,8 @@ mod test {
 
         macro_rules! test_all_with_value {
             ($($t:ty => $v:expr),* $(,)?) => {
-                $(host_library!($v);)*
+                $(assert_implicit_clone!($v);)*
+                $(assert_copy!($v);)*
             };
         }
 
@@ -194,31 +206,31 @@ mod test {
 
     #[test]
     fn ref_type() {
-        host_library!(&NonImplicitCloneType);
-        // `host_library!(NonImplicitCloneType)` doesn't compile
+        assert_implicit_clone!(&NonImplicitCloneType);
+        // `assert_implicit_clone!(NonImplicitCloneType)` doesn't compile
     }
 
     #[test]
     fn option() {
-        host_library!(Some("foo"));
-        // `host_library!(Some(NonImplicitCloneType));` doesn't compile
+        assert_implicit_clone!(Some("foo"));
+        // `assert_implicit_clone!(Some(NonImplicitCloneType));` doesn't compile
     }
 
     #[test]
     fn tuples() {
-        host_library!((1,));
-        host_library!((1, 2));
-        host_library!((1, 2, 3));
-        host_library!((1, 2, 3, 4));
-        host_library!((1, 2, 3, 4, 5));
-        host_library!((1, 2, 3, 4, 5, 6));
-        host_library!((1, 2, 3, 4, 5, 6, 7));
-        host_library!((1, 2, 3, 4, 5, 6, 7, 8));
-        host_library!((1, 2, 3, 4, 5, 6, 7, 8, 9));
-        host_library!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
-        host_library!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
-        host_library!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12));
-        // `host_library!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13));` doesn't compile
-        // `host_library!((NonImplicitCloneType,));` doesn't compile
+        assert_implicit_clone!((1,));
+        assert_implicit_clone!((1, 2));
+        assert_implicit_clone!((1, 2, 3));
+        assert_implicit_clone!((1, 2, 3, 4));
+        assert_implicit_clone!((1, 2, 3, 4, 5));
+        assert_implicit_clone!((1, 2, 3, 4, 5, 6));
+        assert_implicit_clone!((1, 2, 3, 4, 5, 6, 7));
+        assert_implicit_clone!((1, 2, 3, 4, 5, 6, 7, 8));
+        assert_implicit_clone!((1, 2, 3, 4, 5, 6, 7, 8, 9));
+        assert_implicit_clone!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
+        assert_implicit_clone!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
+        assert_implicit_clone!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12));
+        // `assert_implicit_clone!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13));` doesn't compile
+        // `assert_implicit_clone!((NonImplicitCloneType,));` doesn't compile
     }
 }
