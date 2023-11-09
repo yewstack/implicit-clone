@@ -78,6 +78,8 @@ impl_implicit_clone!(
     (),
 );
 
+impl<const N: usize, T: ImplicitClone> ImplicitClone for [T; N] {}
+
 macro_rules! impl_implicit_clone_for_tuple {
     ($($param:ident),+ $(,)?) => {
         impl<$($param: ImplicitClone),+> ImplicitClone for ($($param,)+) {}
@@ -160,9 +162,12 @@ mod test {
 
     #[test]
     fn copy_types() {
+        fn assert_copy<T: Copy>(_: T) {}
+
         macro_rules! test_all {
             ($($t:ty),* $(,)?) => {
                 $(host_library!(<$t>::default());)*
+                $(assert_copy(<$t>::default());)*
             };
         }
 
