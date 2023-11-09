@@ -81,6 +81,7 @@ pub trait ImplicitClone: Clone {
     /// // does not compile because Vec<_> does not implement ImplicitClone
     /// let clone = ImplicitClone::implicit_clone(&x);
     /// ```
+    #[inline]
     fn implicit_clone(&self) -> Self {
         self.clone()
     }
