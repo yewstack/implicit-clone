@@ -40,6 +40,71 @@
 //! particularity: iterating on these types yields clones of the items and not references.** This
 //! can be particularly handy when using a React-like framework.
 //!
+//! ## Example
+//!
+//! As an example, here is an implementation of a macro called `html_input! {}` which allows its
+//! user to build an `<input>` HTML node:
+//!
+//! ```
+//! // In the host library source code:
+//!
+//! use implicit_clone::ImplicitClone;
+//! use implicit_clone::unsync::IString;
+//!
+//! macro_rules! html_input {
+//!     (<input $(type={$ty:expr})? $(name={$name:expr})? $(value={$value:expr})?>) => {{
+//!         let mut input = Input::new();
+//!         $(input.type = $ty.clone().into();)*
+//!         $(input.name.replace($name.clone().into());)*
+//!         $(input.value.replace($value.clone().into());)*
+//!         input
+//!     }}
+//! }
+//!
+//! #[derive(Clone)]
+//! pub struct Input {
+//!     ty: IString,
+//!     name: Option<IString>,
+//!     value: Option<IString>,
+//! }
+//!
+//! impl ImplicitClone for Input {}
+//!
+//! impl Input {
+//!     pub fn new() -> Self {
+//!         Self {
+//!             ty: IString::Static("text"),
+//!             name: None,
+//!             value: None,
+//!         }
+//!     }
+//! }
+//!
+//! impl std::fmt::Display for Input {
+//!     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//!         write!(f, "<input type=\"{}\"", self.ty)?;
+//!         if let Some(name) = self.name.as_ref() {
+//!             write!(f, " name=\"{}\"", name)?;
+//!         }
+//!         if let Some(value) = self.value.as_ref() {
+//!             write!(f, " value=\"{}\"", value)?;
+//!         }
+//!         write!(f, ">")
+//!     }
+//! }
+//!
+//! // In the user's source code:
+//!
+//! let name = IString::Static("age");
+//! let age = IString::from(20.to_string());
+//! // `name` and `age` are implicitly cloned to the 2 different inputs
+//! let input1 = html_input!(<input name={name} value={age}>);
+//! let input2 = html_input!(<input name={name} value={age}>);
+//!
+//! assert_eq!(input1.to_string(), r#"<input type="text" name="age" value="20">"#);
+//! assert_eq!(input2.to_string(), r#"<input type="text" name="age" value="20">"#);
+//! ```
+//!
 //! [std::marker::Copy]: https://doc.rust-lang.org/std/marker/trait.Copy.html
 //! [std::clone::Clone]: https://doc.rust-lang.org/std/clone/trait.Clone.html
 //! [std::rc::Rc]: https://doc.rust-lang.org/std/rc/struct.Rc.html
@@ -168,13 +233,13 @@ macro_rules! imap_deconstruct {
 mod test {
     use super::*;
 
-    fn host_library<T: ImplicitClone>(value: &T) -> T {
-        value.clone()
+    fn assert_implicit_clone<T: ImplicitClone + Copy>(value: &T) -> T {
+        *value
     }
 
-    macro_rules! host_library {
+    macro_rules! assert_implicit_clone {
         ($a:expr) => {
-            host_library(&$a)
+            assert_implicit_clone(&$a)
         };
     }
 
@@ -187,17 +252,20 @@ mod test {
 
         impl ImplicitClone for ImplicitCloneType {}
 
-        host_library!(ImplicitCloneType);
+        #[allow(dead_code)]
+        fn assert_ok() {
+            fn assert_implicit_clone<T: ImplicitClone>(_value: &T) -> T {
+                unreachable!()
+            }
+            assert_implicit_clone(&ImplicitCloneType);
+        }
     }
 
     #[test]
     fn copy_types() {
-        fn assert_copy<T: Copy>(_: T) {}
-
         macro_rules! test_all {
             ($($t:ty),* $(,)?) => {
-                $(host_library!(<$t>::default());)*
-                $(assert_copy(<$t>::default());)*
+                $(assert_implicit_clone!(<$t>::default());)*
             };
         }
 
@@ -209,36 +277,47 @@ mod test {
             bool,
             usize, isize, char,
             (),
+            [u8; 4],
+            &[u8],
+        );
+
+        macro_rules! test_all_with_value {
+            ($($t:ty => $v:expr),* $(,)?) => {
+                $(assert_implicit_clone!($v);)*
+            };
+        }
+
+        #[rustfmt::skip]
+        test_all_with_value!(
+            &[u8; 4] => &[0, 1, 2, 3],
         );
     }
 
     #[test]
     fn ref_type() {
-        host_library!(&NonImplicitCloneType);
-        // `host_library!(NonImplicitCloneType)` doesn't compile
+        assert_implicit_clone!(&NonImplicitCloneType);
+        // `assert_implicit_clone!(NonImplicitCloneType)` doesn't compile
     }
 
     #[test]
     fn option() {
-        host_library!(Some("foo"));
-        // `host_library!(Some(NonImplicitCloneType));` doesn't compile
+        assert_implicit_clone!(Some("foo"));
     }
 
     #[test]
     fn tuples() {
-        host_library!((1,));
-        host_library!((1, 2));
-        host_library!((1, 2, 3));
-        host_library!((1, 2, 3, 4));
-        host_library!((1, 2, 3, 4, 5));
-        host_library!((1, 2, 3, 4, 5, 6));
-        host_library!((1, 2, 3, 4, 5, 6, 7));
-        host_library!((1, 2, 3, 4, 5, 6, 7, 8));
-        host_library!((1, 2, 3, 4, 5, 6, 7, 8, 9));
-        host_library!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
-        host_library!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
-        host_library!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12));
-        // `host_library!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13));` doesn't compile
-        // `host_library!((NonImplicitCloneType,));` doesn't compile
+        assert_implicit_clone!((1,));
+        assert_implicit_clone!((1, 2));
+        assert_implicit_clone!((1, 2, 3));
+        assert_implicit_clone!((1, 2, 3, 4));
+        assert_implicit_clone!((1, 2, 3, 4, 5));
+        assert_implicit_clone!((1, 2, 3, 4, 5, 6));
+        assert_implicit_clone!((1, 2, 3, 4, 5, 6, 7));
+        assert_implicit_clone!((1, 2, 3, 4, 5, 6, 7, 8));
+        assert_implicit_clone!((1, 2, 3, 4, 5, 6, 7, 8, 9));
+        assert_implicit_clone!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
+        assert_implicit_clone!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
+        assert_implicit_clone!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12));
+        // `assert_implicit_clone!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13));` doesn't compile
     }
 }
