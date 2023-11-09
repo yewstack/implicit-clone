@@ -55,7 +55,37 @@ pub mod unsync;
 ///
 /// Enables host libraries to have the same syntax as [`Copy`] while calling the [`Clone`]
 /// implementation instead.
-pub trait ImplicitClone: Clone {}
+pub trait ImplicitClone: Clone {
+    /// This function is not magic; it is literally defined as
+    ///
+    /// ```ignore
+    /// fn implicit_clone(&self) -> Self {
+    ///     self.clone()
+    /// }
+    /// ```
+    ///
+    /// It is useful when you want to clone but also ensure that the type implements
+    /// [`ImplicitClone`].
+    ///
+    /// Examples:
+    ///
+    /// ```
+    /// use implicit_clone::ImplicitClone;
+    /// let x: u32 = Default::default();
+    /// let clone = ImplicitClone::implicit_clone(&x);
+    /// ```
+    ///
+    /// ```compile_fail
+    /// use implicit_clone::ImplicitClone;
+    /// let x: Vec<u32> = Default::default();
+    /// // does not compile because Vec<_> does not implement ImplicitClone
+    /// let clone = ImplicitClone::implicit_clone(&x);
+    /// ```
+    #[inline]
+    fn implicit_clone(&self) -> Self {
+        self.clone()
+    }
+}
 
 impl<T: ?Sized> ImplicitClone for &T {}
 
@@ -77,6 +107,8 @@ impl_implicit_clone!(
     char,
     (),
 );
+
+impl<const N: usize, T: ImplicitClone> ImplicitClone for [T; N] {}
 
 macro_rules! impl_implicit_clone_for_tuple {
     ($($param:ident),+ $(,)?) => {
@@ -195,9 +227,12 @@ mod test {
 
     #[test]
     fn copy_types() {
+        fn assert_copy<T: Copy>(_: T) {}
+
         macro_rules! test_all {
             ($($t:ty),* $(,)?) => {
                 $(host_library!(<$t>::default());)*
+                $(assert_copy(<$t>::default());)*
             };
         }
 
