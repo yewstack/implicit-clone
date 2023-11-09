@@ -1,6 +1,6 @@
 [package]
-name = "implicit-clone"
-version = "0.4.6"
+name = "implicit-clone-derive"
+version = "0.1.0"
 authors = ["Cecile Tonglet <cecile.tonglet@cecton.com>"]
 license = "MIT OR Apache-2.0"
 edition = "2021"
@@ -13,20 +13,14 @@ keywords = ["immutable", "cheap-clone", "copy", "rc"]
 categories = ["rust-patterns"]
 rust-version = "1.64"
 
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
-
-[features]
-default = ["derive"]
-map = ["indexmap"]
-serde = ["dep:serde", "indexmap/serde"]
-derive = ["implicit-clone-derive"]
+[lib]
+proc-macro = true
 
 [dependencies]
-implicit-clone-derive = { version = "0.1", optional = true, path = "./implicit-clone-derive" }
-indexmap = { version = ">= 1, <= 2", optional = true }
-serde = { version = "1", optional = true }
+quote = "1"
+syn = { version = "2", features = ["full"] }
 
-[workspace]
-members = ["implicit-clone-derive"]
+[dev-dependencies]
+implicit-clone = { path = ".." }
+trybuild = "1"
+rustversion = "1"
