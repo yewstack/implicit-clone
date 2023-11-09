@@ -195,7 +195,7 @@ macro_rules! imap_deconstruct {
 #[macro_export]
 macro_rules! unstruct {
     (let { $($field:ident),* $(,)? } = $struct:expr;) => {
-        $(let $field = $struct.$field.clone();)*
+        $(let $field = $crate::ImplicitClone::implicit_clone(&$struct.$field);)*
     }
 }
 
