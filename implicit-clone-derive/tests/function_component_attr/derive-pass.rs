@@ -39,6 +39,12 @@ pub struct usize;
 #[derive(Clone, ::implicit_clone::ImplicitClone)]
 struct ExampleStruct;
 
+#[derive(Clone, ::implicit_clone::ImplicitClone)]
+struct StructWithGenerics<T>(T);
+
+#[derive(Clone, ::implicit_clone::ImplicitClone)]
+struct StructWithGenericsWithBounds<T: ::std::cmp::PartialEq>(T);
+
 fn main() {
     let _ = ::implicit_clone::ImplicitClone::implicit_clone(&ExampleStruct);
 }
