@@ -2,9 +2,9 @@ use quote::quote;
 
 #[proc_macro_derive(ImplicitClone)]
 pub fn derive_implicit_clone(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let syn::ItemStruct {
+    let syn::DeriveInput {
         ident, generics, ..
-    } = syn::parse_macro_input!(item as syn::ItemStruct);
+    } = syn::parse_macro_input!(item as syn::DeriveInput);
     let (_impl_generics, ty_generics, where_clause) = generics.split_for_impl();
     let generics = generics
         .params
