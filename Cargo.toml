@@ -1,6 +1,6 @@
 [package]
 name = "implicit-clone"
-version = "0.4.6"
+version = "0.4.7"
 authors = ["Cecile Tonglet <cecile.tonglet@cecton.com>"]
 license = "MIT OR Apache-2.0"
 edition = "2021"
