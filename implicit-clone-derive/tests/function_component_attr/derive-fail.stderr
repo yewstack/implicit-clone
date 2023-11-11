@@ -1,0 +1,24 @@
+error[E0774]: `derive` may only be applied to `struct`s, `enum`s and `union`s
+ --> tests/function_component_attr/derive-fail.rs:6:1
+  |
+6 | #[derive(ImplicitClone)]
+  | ^^^^^^^^^^^^^^^^^^^^^^^^ not applicable here
+7 | fn foo() {}
+  | ----------- not a `struct`, `enum` or `union`
+
+error[E0277]: the trait bound `NotClonableStruct: Clone` is not satisfied
+ --> tests/function_component_attr/derive-fail.rs:3:10
+  |
+3 | #[derive(ImplicitClone)]
+  |          ^^^^^^^^^^^^^ the trait `Clone` is not implemented for `NotClonableStruct`
+  |
+note: required by a bound in `ImplicitClone`
+ --> $WORKSPACE/src/lib.rs
+  |
+  | pub trait ImplicitClone: Clone {
+  |                          ^^^^^ required by this bound in `ImplicitClone`
+  = note: this error originates in the derive macro `ImplicitClone` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: consider annotating `NotClonableStruct` with `#[derive(Clone)]`
+  |
+4 | #[derive(Clone)]
+  |
