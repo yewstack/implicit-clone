@@ -46,8 +46,12 @@ impl<T: ImplicitClone + 'static> Default for IArray<T> {
 
 impl<T: ImplicitClone + 'static> FromIterator<T> for IArray<T> {
     fn from_iter<I: IntoIterator<Item = T>>(it: I) -> Self {
-        let vec = it.into_iter().collect::<Vec<T>>();
-        Self::Rc(Rc::from(vec))
+        let mut it = it.into_iter();
+        if it.size_hint() == (1, Some(1)) {
+            Self::Single([it.next().unwrap()])
+        } else {
+            Self::Rc(Rc::from(it.collect::<Vec<T>>()))
+        }
     }
 }
 
@@ -392,6 +396,14 @@ mod test_array {
     fn array_holding_rc_items() {
         struct Item;
         let _array = [Rc::new(Item)].into_iter().collect::<IArray<Rc<Item>>>();
+    }
+
+    #[test]
+    fn from_iter_is_optimized() {
+        let array_1 = [1].into_iter().collect::<IArray<u32>>();
+        assert!(matches!(array_1, IArray::Single(_)));
+        let array_2 = [1, 2].into_iter().collect::<IArray<u32>>();
+        assert!(matches!(array_2, IArray::Rc(_)));
     }
 
     #[test]
