@@ -49,14 +49,14 @@
 //! // In the host library source code:
 //!
 //! use implicit_clone::ImplicitClone;
-//! use implicit_clone::unsync::IString;
+//! use implicit_clone::unsync::{IArray, IString};
 //!
 //! macro_rules! html_input {
 //!     (<input $(type={$ty:expr})? $(name={$name:expr})? $(value={$value:expr})?>) => {{
 //!         let mut input = Input::new();
 //!         $(input.type = $ty.clone().into();)*
-//!         $(input.name.replace($name.clone().into());)*
-//!         $(input.value.replace($value.clone().into());)*
+//!         $(input.name.replace($name.into());)*
+//!         $(input.value.replace($value.into());)*
 //!         input
 //!     }}
 //! }
@@ -95,14 +95,26 @@
 //!
 //! // In the user's source code:
 //!
-//! let name = IString::Static("age");
-//! let age = IString::from(20.to_string());
-//! // `name` and `age` are implicitly cloned to the 2 different inputs
-//! let input1 = html_input!(<input name={name} value={age}>);
-//! let input2 = html_input!(<input name={name} value={age}>);
+//! fn component(age: &IString) -> IArray<Input> {
+//!     // `age` is implicitly cloned to the 2 different inputs
+//!     let input1 = html_input!(<input name={"age"} value={age}>);
+//!     let input2 = html_input!(<input name={"age"} value={age}>);
 //!
-//! assert_eq!(input1.to_string(), r#"<input type="text" name="age" value="20">"#);
-//! assert_eq!(input2.to_string(), r#"<input type="text" name="age" value="20">"#);
+//!     IArray::from(vec![input1, input2])
+//! }
+//!
+//! let age = IString::from(20.to_string());
+//! let output = component(&age);
+//! let output_str = output
+//!     .iter()
+//!     .map(|x| x.to_string())
+//!     .collect::<Vec<_>>()
+//!     .join("");
+//!
+//! assert_eq!(
+//!     output_str,
+//!     r#"<input type="text" name="age" value="20"><input type="text" name="age" value="20">"#,
+//! );
 //! ```
 //!
 //! [std::marker::Copy]: https://doc.rust-lang.org/std/marker/trait.Copy.html
