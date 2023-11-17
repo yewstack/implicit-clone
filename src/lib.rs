@@ -282,16 +282,14 @@ mod test {
 
     #[test]
     fn ref_type() {
-        #[allow(dead_code)]
-        struct NonImplicitCloneType;
-
-        assert_impl_all!(&NonImplicitCloneType: ImplicitClone);
-        assert_not_impl_all!(NonImplicitCloneType: ImplicitClone);
+        assert_impl_all!(&Vec<u8>: ImplicitClone);
+        assert_not_impl_all!(Vec<u8>: ImplicitClone);
     }
 
     #[test]
     fn option() {
         assert_impl_all!(Option<&'static str>: ImplicitClone);
+        assert_not_impl_all!(Option<Vec<u8>>: ImplicitClone);
     }
 
     #[test]
@@ -309,5 +307,6 @@ mod test {
         assert_impl_all!((u8, u8, u8, u8, u8, u8, u8, u8, u8, u8, u8): ImplicitClone);
         assert_impl_all!((u8, u8, u8, u8, u8, u8, u8, u8, u8, u8, u8, u8): ImplicitClone);
         assert_not_impl_all!((u8, u8, u8, u8, u8, u8, u8, u8, u8, u8, u8, u8, u8): ImplicitClone);
+        assert_not_impl_all!((Vec<u8>,): ImplicitClone);
     }
 }
