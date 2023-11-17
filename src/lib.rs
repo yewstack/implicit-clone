@@ -248,13 +248,9 @@ macro_rules! imap_deconstruct {
 mod test {
     use super::*;
 
-    fn assert_implicit_clone<T: ImplicitClone>(value: &T) -> T {
-        value.clone()
-    }
+    fn assert_implicit_clone<T: ImplicitClone>() {}
 
-    fn assert_copy<T: Copy>(value: T) -> T {
-        value
-    }
+    fn assert_copy<T: Copy>() {}
 
     struct NonImplicitCloneType;
 
@@ -267,7 +263,7 @@ mod test {
 
         #[allow(dead_code)]
         fn assert_ok() {
-            assert_implicit_clone(&ImplicitCloneType);
+            assert_implicit_clone::<ImplicitCloneType>();
         }
     }
 
@@ -275,8 +271,8 @@ mod test {
     fn copy_types() {
         macro_rules! test_all {
             ($($t:ty),* $(,)?) => {
-                $(assert_implicit_clone::<$t>(&Default::default());)*
-                $(assert_copy::<$t>(Default::default());)*
+                $(assert_implicit_clone::<$t>();)*
+                $(assert_copy::<$t>();)*
             };
         }
 
@@ -295,27 +291,27 @@ mod test {
 
     #[test]
     fn ref_type() {
-        assert_implicit_clone(&&NonImplicitCloneType);
+        assert_implicit_clone::<&NonImplicitCloneType>();
     }
 
     #[test]
     fn option() {
-        assert_implicit_clone(&Some("foo"));
+        assert_implicit_clone::<Option<&'static str>>();
     }
 
     #[test]
     fn tuples() {
-        assert_implicit_clone(&(1,));
-        assert_implicit_clone(&(1, 2));
-        assert_implicit_clone(&(1, 2, 3));
-        assert_implicit_clone(&(1, 2, 3, 4));
-        assert_implicit_clone(&(1, 2, 3, 4, 5));
-        assert_implicit_clone(&(1, 2, 3, 4, 5, 6));
-        assert_implicit_clone(&(1, 2, 3, 4, 5, 6, 7));
-        assert_implicit_clone(&(1, 2, 3, 4, 5, 6, 7, 8));
-        assert_implicit_clone(&(1, 2, 3, 4, 5, 6, 7, 8, 9));
-        assert_implicit_clone(&(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
-        assert_implicit_clone(&(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
-        assert_implicit_clone(&(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12));
+        assert_implicit_clone::<(u8,)>();
+        assert_implicit_clone::<(u8, u8)>();
+        assert_implicit_clone::<(u8, u8, u8)>();
+        assert_implicit_clone::<(u8, u8, u8, u8)>();
+        assert_implicit_clone::<(u8, u8, u8, u8, u8)>();
+        assert_implicit_clone::<(u8, u8, u8, u8, u8, u8)>();
+        assert_implicit_clone::<(u8, u8, u8, u8, u8, u8, u8)>();
+        assert_implicit_clone::<(u8, u8, u8, u8, u8, u8, u8, u8)>();
+        assert_implicit_clone::<(u8, u8, u8, u8, u8, u8, u8, u8, u8)>();
+        assert_implicit_clone::<(u8, u8, u8, u8, u8, u8, u8, u8, u8, u8)>();
+        assert_implicit_clone::<(u8, u8, u8, u8, u8, u8, u8, u8, u8, u8, u8)>();
+        assert_implicit_clone::<(u8, u8, u8, u8, u8, u8, u8, u8, u8, u8, u8, u8)>();
     }
 }
