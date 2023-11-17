@@ -54,9 +54,9 @@
 //! macro_rules! html_input {
 //!     (<input $(type={$ty:expr})? $(name={$name:expr})? $(value={$value:expr})?>) => {{
 //!         let mut input = Input::new();
-//!         $(input.type = $ty.into();)*
-//!         $(input.name.replace($name.into());)*
-//!         $(input.value.replace($value.into());)*
+//!         $(input.set_type($ty);)*
+//!         $(input.set_name($name);)*
+//!         $(input.set_value($value);)*
 //!         input
 //!     }}
 //! }
@@ -77,6 +77,18 @@
 //!             name: None,
 //!             value: None,
 //!         }
+//!     }
+//!
+//!     pub fn set_type(&mut self, ty: impl Into<IString>) {
+//!         self.ty = ty.into();
+//!     }
+//!
+//!     pub fn set_name(&mut self, name: impl Into<IString>) {
+//!         self.name.replace(name.into());
+//!     }
+//!
+//!     pub fn set_value(&mut self, value: impl Into<IString>) {
+//!         self.value.replace(value.into());
 //!     }
 //! }
 //!
