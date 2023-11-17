@@ -40,6 +40,95 @@
 //! particularity: iterating on these types yields clones of the items and not references.** This
 //! can be particularly handy when using a React-like framework.
 //!
+//! ## Example
+//!
+//! As an example, here is an implementation of a macro called `html_input! {}` which allows its
+//! user to build an `<input>` HTML node:
+//!
+//! ```
+//! // In the host library source code:
+//!
+//! use implicit_clone::ImplicitClone;
+//! use implicit_clone::unsync::{IArray, IString};
+//!
+//! macro_rules! html_input {
+//!     (<input $(type={$ty:expr})? $(name={$name:expr})? $(value={$value:expr})?>) => {{
+//!         let mut input = Input::new();
+//!         $(input.set_type($ty);)*
+//!         $(input.set_name($name);)*
+//!         $(input.set_value($value);)*
+//!         input
+//!     }}
+//! }
+//!
+//! #[derive(Clone)]
+//! pub struct Input {
+//!     ty: IString,
+//!     name: Option<IString>,
+//!     value: Option<IString>,
+//! }
+//!
+//! impl ImplicitClone for Input {}
+//!
+//! impl Input {
+//!     pub fn new() -> Self {
+//!         Self {
+//!             ty: IString::Static("text"),
+//!             name: None,
+//!             value: None,
+//!         }
+//!     }
+//!
+//!     pub fn set_type(&mut self, ty: impl Into<IString>) {
+//!         self.ty = ty.into();
+//!     }
+//!
+//!     pub fn set_name(&mut self, name: impl Into<IString>) {
+//!         self.name.replace(name.into());
+//!     }
+//!
+//!     pub fn set_value(&mut self, value: impl Into<IString>) {
+//!         self.value.replace(value.into());
+//!     }
+//! }
+//!
+//! impl std::fmt::Display for Input {
+//!     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//!         write!(f, "<input type=\"{}\"", self.ty)?;
+//!         if let Some(name) = self.name.as_ref() {
+//!             write!(f, " name=\"{}\"", name)?;
+//!         }
+//!         if let Some(value) = self.value.as_ref() {
+//!             write!(f, " value=\"{}\"", value)?;
+//!         }
+//!         write!(f, ">")
+//!     }
+//! }
+//!
+//! // In the user's source code:
+//!
+//! fn component(age: &IString) -> IArray<Input> {
+//!     // `age` is implicitly cloned to the 2 different inputs
+//!     let input1 = html_input!(<input name={"age"} value={age}>);
+//!     let input2 = html_input!(<input name={"age"} value={age}>);
+//!
+//!     IArray::from(vec![input1, input2])
+//! }
+//!
+//! let age = IString::from(20.to_string());
+//! let output = component(&age);
+//! let output_str = output
+//!     .iter()
+//!     .map(|x| x.to_string())
+//!     .collect::<Vec<_>>()
+//!     .join("");
+//!
+//! assert_eq!(
+//!     output_str,
+//!     r#"<input type="text" name="age" value="20"><input type="text" name="age" value="20">"#,
+//! );
+//! ```
+//!
 //! [std::marker::Copy]: https://doc.rust-lang.org/std/marker/trait.Copy.html
 //! [std::clone::Clone]: https://doc.rust-lang.org/std/clone/trait.Clone.html
 //! [std::rc::Rc]: https://doc.rust-lang.org/std/rc/struct.Rc.html
@@ -170,18 +259,7 @@ macro_rules! imap_deconstruct {
 #[cfg(test)]
 mod test {
     use super::*;
-
-    fn host_library<T: ImplicitClone>(value: &T) -> T {
-        value.clone()
-    }
-
-    macro_rules! host_library {
-        ($a:expr) => {
-            host_library(&$a)
-        };
-    }
-
-    struct NonImplicitCloneType;
+    use static_assertions::*;
 
     #[test]
     fn custom() {
@@ -190,17 +268,14 @@ mod test {
 
         impl ImplicitClone for ImplicitCloneType {}
 
-        host_library!(ImplicitCloneType);
+        assert_impl_all!(ImplicitCloneType: ImplicitClone);
     }
 
     #[test]
     fn copy_types() {
-        fn assert_copy<T: Copy>(_: T) {}
-
         macro_rules! test_all {
             ($($t:ty),* $(,)?) => {
-                $(host_library!(<$t>::default());)*
-                $(assert_copy(<$t>::default());)*
+                $(assert_impl_all!($t: ImplicitClone, Copy);)*
             };
         }
 
@@ -212,36 +287,38 @@ mod test {
             bool,
             usize, isize, char,
             (),
+            [u8; 4],
+            &[u8],
         );
     }
 
     #[test]
     fn ref_type() {
-        host_library!(&NonImplicitCloneType);
-        // `host_library!(NonImplicitCloneType)` doesn't compile
+        assert_impl_all!(&Vec<u8>: ImplicitClone);
+        assert_not_impl_all!(Vec<u8>: ImplicitClone);
     }
 
     #[test]
     fn option() {
-        host_library!(Some("foo"));
-        // `host_library!(Some(NonImplicitCloneType));` doesn't compile
+        assert_impl_all!(Option<&'static str>: ImplicitClone);
+        assert_not_impl_all!(Option<Vec<u8>>: ImplicitClone);
     }
 
     #[test]
     fn tuples() {
-        host_library!((1,));
-        host_library!((1, 2));
-        host_library!((1, 2, 3));
-        host_library!((1, 2, 3, 4));
-        host_library!((1, 2, 3, 4, 5));
-        host_library!((1, 2, 3, 4, 5, 6));
-        host_library!((1, 2, 3, 4, 5, 6, 7));
-        host_library!((1, 2, 3, 4, 5, 6, 7, 8));
-        host_library!((1, 2, 3, 4, 5, 6, 7, 8, 9));
-        host_library!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
-        host_library!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
-        host_library!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12));
-        // `host_library!((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13));` doesn't compile
-        // `host_library!((NonImplicitCloneType,));` doesn't compile
+        assert_impl_all!((u8,): ImplicitClone);
+        assert_impl_all!((u8, u8): ImplicitClone);
+        assert_impl_all!((u8, u8, u8): ImplicitClone);
+        assert_impl_all!((u8, u8, u8, u8): ImplicitClone);
+        assert_impl_all!((u8, u8, u8, u8, u8): ImplicitClone);
+        assert_impl_all!((u8, u8, u8, u8, u8, u8): ImplicitClone);
+        assert_impl_all!((u8, u8, u8, u8, u8, u8, u8): ImplicitClone);
+        assert_impl_all!((u8, u8, u8, u8, u8, u8, u8, u8): ImplicitClone);
+        assert_impl_all!((u8, u8, u8, u8, u8, u8, u8, u8, u8): ImplicitClone);
+        assert_impl_all!((u8, u8, u8, u8, u8, u8, u8, u8, u8, u8): ImplicitClone);
+        assert_impl_all!((u8, u8, u8, u8, u8, u8, u8, u8, u8, u8, u8): ImplicitClone);
+        assert_impl_all!((u8, u8, u8, u8, u8, u8, u8, u8, u8, u8, u8, u8): ImplicitClone);
+        assert_not_impl_all!((u8, u8, u8, u8, u8, u8, u8, u8, u8, u8, u8, u8, u8): ImplicitClone);
+        assert_not_impl_all!((Vec<u8>,): ImplicitClone);
     }
 }
