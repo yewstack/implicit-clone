@@ -128,6 +128,9 @@ pub mod sync;
 /// Single-threaded version of immutable types.
 pub mod unsync;
 
+#[cfg(feature = "implicit-clone-derive")]
+pub use implicit_clone_derive::*;
+
 /// Marker trait for cheap-to-clone types that should be allowed to be cloned implicitly.
 ///
 /// Enables host libraries to have the same syntax as [`Copy`] while calling the [`Clone`]

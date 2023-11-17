@@ -1,6 +1,6 @@
 [package]
 name = "implicit-clone"
-version = "0.4.5"
+version = "0.4.7"
 authors = ["Cecile Tonglet <cecile.tonglet@cecton.com>"]
 license = "MIT OR Apache-2.0"
 edition = "2021"
@@ -18,9 +18,15 @@ all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
 [features]
+default = ["derive"]
 map = ["indexmap"]
 serde = ["dep:serde", "indexmap/serde"]
+derive = ["implicit-clone-derive"]
 
 [dependencies]
+implicit-clone-derive = { version = "0.1", optional = true, path = "./implicit-clone-derive" }
 indexmap = { version = ">= 1, <= 2", optional = true }
 serde = { version = "1", optional = true }
+
+[workspace]
+members = ["implicit-clone-derive"]

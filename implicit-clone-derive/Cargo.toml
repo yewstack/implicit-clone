@@ -1,0 +1,25 @@
+[package]
+name = "implicit-clone-derive"
+version = "0.1.1"
+authors = ["Cecile Tonglet <cecile.tonglet@cecton.com>"]
+license = "MIT OR Apache-2.0"
+edition = "2021"
+description = "Immutable types and ImplicitClone trait similar to Copy"
+repository = "https://github.com/yewstack/implicit-clone"
+homepage = "https://github.com/yewstack/implicit-clone"
+documentation = "https://docs.rs/implicit-clone"
+keywords = ["immutable", "cheap-clone", "copy", "rc"]
+categories = ["rust-patterns"]
+rust-version = "1.64"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1"
+syn = { version = "2", features = ["full"] }
+
+[dev-dependencies]
+implicit-clone = { path = ".." }
+trybuild = "1"
+rustversion = "1"
