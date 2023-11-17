@@ -54,7 +54,7 @@
 //! macro_rules! html_input {
 //!     (<input $(type={$ty:expr})? $(name={$name:expr})? $(value={$value:expr})?>) => {{
 //!         let mut input = Input::new();
-//!         $(input.type = $ty.clone().into();)*
+//!         $(input.type = $ty.into();)*
 //!         $(input.name.replace($name.into());)*
 //!         $(input.value.replace($value.into());)*
 //!         input
