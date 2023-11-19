@@ -49,8 +49,14 @@ impl<T: ImplicitClone + 'static> FromIterator<T> for IArray<T> {
         let mut it = it.into_iter();
         match it.size_hint() {
             (0, Some(0)) => Self::EMPTY,
-            (1, Some(1)) => Self::Single([it.next().unwrap()]),
-            _ => Self::Rc(Rc::from(it.collect::<Vec<T>>())),
+            (_, Some(1)) => {
+                if let Some(element) = it.next() {
+                    Self::Single([element])
+                } else {
+                    Self::EMPTY
+                }
+            }
+            _ => Self::Rc(Rc::from_iter(it)),
         }
     }
 }
@@ -409,6 +415,18 @@ mod test_array {
         assert!(matches!(array_1, IArray::Single(_)));
         let array_2 = [1, 2].into_iter().collect::<IArray<u32>>();
         assert!(matches!(array_2, IArray::Rc(_)));
+        {
+            let it = [1].into_iter().filter(|x| x % 2 == 0);
+            assert_eq!(it.size_hint(), (0, Some(1)));
+            let array_0_to_1 = it.collect::<IArray<u32>>();
+            assert!(matches!(array_0_to_1, IArray::Static(_)));
+        }
+        {
+            let it = [2].into_iter().filter(|x| x % 2 == 0);
+            assert_eq!(it.size_hint(), (0, Some(1)));
+            let array_0_to_1 = it.collect::<IArray<u32>>();
+            assert!(matches!(array_0_to_1, IArray::Single(_)));
+        }
     }
 
     #[test]

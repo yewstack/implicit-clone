@@ -17,3 +17,10 @@ fn from_iter_collection_with_single_element(bencher: divan::Bencher) {
         let _: IArray<u32> = divan::black_box(vec![42]).into_iter().collect();
     });
 }
+
+#[divan::bench(sample_size = 10000000)]
+fn from_iter_collection_with_multiple_elements(bencher: divan::Bencher) {
+    bencher.bench_local(move || {
+        let _: IArray<u32> = divan::black_box(vec![42, 43]).into_iter().collect();
+    });
+}
