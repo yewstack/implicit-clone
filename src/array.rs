@@ -48,7 +48,7 @@ impl<T: ImplicitClone + 'static> FromIterator<T> for IArray<T> {
     fn from_iter<I: IntoIterator<Item = T>>(it: I) -> Self {
         let mut it = it.into_iter();
         match it.size_hint() {
-            (0, Some(0)) => Self::EMPTY,
+            (_, Some(0)) => Self::EMPTY,
             (_, Some(1)) => {
                 if let Some(element) = it.next() {
                     Self::Single([element])
