@@ -40,17 +40,23 @@ impl<T: ImplicitClone + 'static> Clone for IArray<T> {
 
 impl<T: ImplicitClone + 'static> Default for IArray<T> {
     fn default() -> Self {
-        Self::Static(&[])
+        Self::EMPTY
     }
 }
 
 impl<T: ImplicitClone + 'static> FromIterator<T> for IArray<T> {
     fn from_iter<I: IntoIterator<Item = T>>(it: I) -> Self {
         let mut it = it.into_iter();
-        if it.size_hint() == (1, Some(1)) {
-            Self::Single([it.next().unwrap()])
-        } else {
-            Self::Rc(Rc::from(it.collect::<Vec<T>>()))
+        match it.size_hint() {
+            (_, Some(0)) => Self::EMPTY,
+            (_, Some(1)) => {
+                if let Some(element) = it.next() {
+                    Self::Single([element])
+                } else {
+                    Self::EMPTY
+                }
+            }
+            _ => Self::Rc(Rc::from_iter(it)),
         }
     }
 }
@@ -111,6 +117,9 @@ impl<T: ImplicitClone + 'static> Iterator for Iter<T> {
 }
 
 impl<T: ImplicitClone + 'static> IArray<T> {
+    /// An empty array without allocation.
+    pub const EMPTY: Self = Self::Static(&[]);
+
     /// Returns an iterator over the slice.
     ///
     /// # Examples
@@ -400,10 +409,24 @@ mod test_array {
 
     #[test]
     fn from_iter_is_optimized() {
+        let array_0 = [].into_iter().collect::<IArray<u32>>();
+        assert!(matches!(array_0, IArray::Static(_)));
         let array_1 = [1].into_iter().collect::<IArray<u32>>();
         assert!(matches!(array_1, IArray::Single(_)));
         let array_2 = [1, 2].into_iter().collect::<IArray<u32>>();
         assert!(matches!(array_2, IArray::Rc(_)));
+        {
+            let it = [1].into_iter().filter(|x| x % 2 == 0);
+            assert_eq!(it.size_hint(), (0, Some(1)));
+            let array_0_to_1 = it.collect::<IArray<u32>>();
+            assert!(matches!(array_0_to_1, IArray::Static(_)));
+        }
+        {
+            let it = [2].into_iter().filter(|x| x % 2 == 0);
+            assert_eq!(it.size_hint(), (0, Some(1)));
+            let array_0_to_1 = it.collect::<IArray<u32>>();
+            assert!(matches!(array_0_to_1, IArray::Single(_)));
+        }
     }
 
     #[test]
@@ -418,19 +441,19 @@ mod test_array {
 
     #[test]
     fn tuple_in_array() {
-        const _ARRAY_2: IArray<(u32, u32)> = IArray::Static(&[]);
-        const _ARRAY_5: IArray<(u32, u32, u32, u32, u32)> = IArray::Static(&[]);
+        const _ARRAY_2: IArray<(u32, u32)> = IArray::EMPTY;
+        const _ARRAY_5: IArray<(u32, u32, u32, u32, u32)> = IArray::EMPTY;
     }
 
     #[test]
     fn floats_in_array() {
-        const _ARRAY_F32: IArray<f32> = IArray::Static(&[]);
-        const _ARRAY_F64: IArray<f64> = IArray::Static(&[]);
+        const _ARRAY_F32: IArray<f32> = IArray::EMPTY;
+        const _ARRAY_F64: IArray<f64> = IArray::EMPTY;
     }
 
     #[test]
     fn from() {
-        let x: IArray<u32> = IArray::Static(&[]);
+        let x: IArray<u32> = IArray::EMPTY;
         let _out = IArray::from(&x);
 
         let _array: IArray<u32> = IArray::from(&[1, 2, 3][..]);

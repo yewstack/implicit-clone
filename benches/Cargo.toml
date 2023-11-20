@@ -1,0 +1,12 @@
+[package]
+name = "benches"
+version = "0.1.0"
+edition = "2021"
+
+[[bench]]
+name = "array"
+harness = false
+
+[dev-dependencies]
+divan = "0.1"
+implicit-clone = { path = ".." }

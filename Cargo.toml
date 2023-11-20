@@ -32,4 +32,5 @@ serde = { version = "1", optional = true }
 static_assertions = "1"
 
 [workspace]
-members = ["implicit-clone-derive"]
+default-members = [".", "implicit-clone-derive"]
+members = ["implicit-clone-derive", "benches"]
