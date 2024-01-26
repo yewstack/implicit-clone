@@ -96,6 +96,16 @@ impl From<Cow<'static, str>> for IString {
     }
 }
 
+impl From<std::fmt::Arguments<'_>> for IString {
+    fn from(args: std::fmt::Arguments) -> IString {
+        if let Some(s) = args.as_str() {
+            IString::Static(s)
+        } else {
+            IString::from(args.to_string())
+        }
+    }
+}
+
 impl From<&IString> for IString {
     fn from(s: &IString) -> IString {
         s.clone()
@@ -405,5 +415,16 @@ mod test_string {
     fn from_ref() {
         let s = IString::Static("foo");
         let _out = IString::from(&s);
+    }
+
+    #[test]
+    fn from_fmt_arguments() {
+        let s = IString::from(format_args!("Hello World!"));
+        assert!(matches!(s, IString::Static("Hello World!")));
+
+        let name = "Jane";
+        let s = IString::from(format_args!("Hello {name}!"));
+        assert!(matches!(s, IString::Rc(_)));
+        assert_eq!(s, "Hello Jane!");
     }
 }
