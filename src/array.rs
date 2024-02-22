@@ -266,8 +266,7 @@ impl<T: ImplicitClone + 'static> IArray<T> {
     /// If this array is a `Static`, it clones its elements into a new `Rc` array and returns a
     /// mutable slice into that new array.
     ///
-    /// If this array is a `Single` element, the element is cloned into a new `Single` array and a
-    /// mutable slice into that new array is returned.
+    /// If this array is a `Single` element, the inner array is returned directly.
     ///
     /// # Examples
     ///
@@ -317,11 +316,12 @@ impl<T: ImplicitClone + 'static> IArray<T> {
     /// ```
     #[inline]
     pub fn make_mut(&mut self) -> &mut [T] {
-        // This code is somewhat weirdly written to work around https://github.com/rust-lang/rust/issues/54663 -
-        // we can't just check if this is an Rc with one reference with get_mut in an if branch and copy otherwise,
-        // since returning the mutable slice extends its lifetime for the rest of the function.
         match self {
             Self::Rc(ref mut rc) => {
+                // This code is somewhat weirdly written to work around
+                // https://github.com/rust-lang/rust/issues/54663 - we can't just check if this is
+                // an Rc with one reference with get_mut in an if branch and copy otherwise, since
+                // returning the mutable slice extends its lifetime for the rest of the function.
                 if Rc::get_mut(rc).is_none() {
                     *rc = rc.iter().cloned().collect::<Rc<[T]>>();
                 }
