@@ -282,7 +282,7 @@ impl<T: ImplicitClone + 'static> IArray<T> {
     /// ```
     /// # use implicit_clone::unsync::*;
     /// // This will create a new copy
-    /// let mut data = IArray::<u8>::Rc([1,2,3].into());
+    /// let mut data = IArray::<u8>::from(vec![1,2,3]);
     /// let other_data = data.clone();
     /// data.make_mut()[1] = 123;
     /// assert_eq!(&[1,123,3], data.as_slice());
