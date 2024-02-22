@@ -263,20 +263,57 @@ impl<T: ImplicitClone + 'static> IArray<T> {
     /// a mutable slice of the contained data without any cloning. Otherwise, it clones the
     /// data into a new array and returns a mutable slice into that.
     ///
-    /// # Example
+    /// If this array is a `Static`, it clones its elements into a new `Rc` array and returns a
+    /// mutable slice into that new array.
+    ///
+    /// If this array is a `Single` element, the element is cloned into a new `Single` array and a
+    /// mutable slice into that new array is returned.
+    ///
+    /// # Examples
     ///
     /// ```
     /// # use implicit_clone::unsync::*;
-    /// # use std::rc::Rc;
     /// // This will reuse the Rc storage
-    /// let mut v1 = IArray::<u8>::Rc(Rc::new([1,2,3]));
-    /// v1.make_mut()[1] = 123;
-    /// assert_eq!(&[1,123,3], v1.as_slice());
+    /// let mut data = IArray::<u8>::Rc([1,2,3].into());
+    /// data.make_mut()[1] = 123;
+    /// assert_eq!(&[1,123,3], data.as_slice());
+    /// assert!(matches!(data, IArray::<u8>::Rc(_)));
+    /// ```
     ///
+    /// ```
+    /// # use implicit_clone::unsync::*;
     /// // This will create a new copy
-    /// let mut v2 = IArray::<u8>::Static(&[1,2,3]);
-    /// v2.make_mut()[1] = 123;
-    /// assert_eq!(&[1,123,3], v2.as_slice());
+    /// let mut data = IArray::<u8>::Rc([1,2,3].into());
+    /// let other_data = data.clone();
+    /// data.make_mut()[1] = 123;
+    /// assert_eq!(&[1,123,3], data.as_slice());
+    /// assert_eq!(&[1,2,3], other_data.as_slice());
+    /// assert!(matches!(data, IArray::<u8>::Rc(_)));
+    /// assert!(matches!(other_data, IArray::<u8>::Rc(_)));
+    /// ```
+    ///
+    /// ```
+    /// # use implicit_clone::unsync::*;
+    /// // This will create a new copy
+    /// let mut data = IArray::<u8>::Static(&[1,2,3]);
+    /// let other_data = data.clone();
+    /// data.make_mut()[1] = 123;
+    /// assert_eq!(&[1,123,3], data.as_slice());
+    /// assert_eq!(&[1,2,3], other_data.as_slice());
+    /// assert!(matches!(data, IArray::<u8>::Rc(_)));
+    /// assert!(matches!(other_data, IArray::<u8>::Static(_)));
+    /// ```
+    ///
+    /// ```
+    /// # use implicit_clone::unsync::*;
+    /// // This will use the inner array directly
+    /// let mut data = IArray::<u8>::Single([1]);
+    /// let other_data = data.clone();
+    /// data.make_mut()[0] = 123;
+    /// assert_eq!(&[123], data.as_slice());
+    /// assert_eq!(&[1], other_data.as_slice());
+    /// assert!(matches!(data, IArray::<u8>::Single(_)));
+    /// assert!(matches!(other_data, IArray::<u8>::Single(_)));
     /// ```
     #[inline]
     pub fn make_mut(&mut self) -> &mut [T] {
@@ -297,13 +334,7 @@ impl<T: ImplicitClone + 'static> IArray<T> {
                     _ => unreachable!(),
                 }
             }
-            Self::Single(slice) => {
-                *self = Self::Rc(slice.iter().cloned().collect());
-                match self {
-                    Self::Rc(rc) => Rc::get_mut(rc).unwrap(),
-                    _ => unreachable!(),
-                }
-            }
+            Self::Single(array) => array,
         }
     }
 }
