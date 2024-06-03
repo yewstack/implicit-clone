@@ -23,7 +23,7 @@ jobs:
           - stable
           - 1.64.0
         indexmap:
-          - 1.9.3
+          - 2.0.0
           - latest
         include:
           - os: ubuntu-latest
