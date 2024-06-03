@@ -25,7 +25,7 @@ derive = ["implicit-clone-derive"]
 
 [dependencies]
 implicit-clone-derive = { version = "0.1", optional = true, path = "./implicit-clone-derive" }
-indexmap = { version = ">= 1, <= 2", optional = true }
+indexmap = { version = ">= 1, <= 2.2.6", optional = true }
 serde = { version = "1", optional = true }
 
 [dev-dependencies]
