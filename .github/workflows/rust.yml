@@ -22,9 +22,6 @@ jobs:
         rust:
           - stable
           - 1.64.0
-        indexmap:
-          - 2.0.0
-          - latest
         include:
           - os: ubuntu-latest
             rust: stable
@@ -43,11 +40,6 @@ jobs:
           toolchain: ${{ matrix.rust }}
           default: true
           override: true
-
-      - name: Change indexmap version
-        if: matrix.indexmap != 'latest'
-        run: |
-          cargo update -p indexmap --precise ${{ matrix.indexmap }}
 
       - name: cargo test
         uses: actions-rs/cargo@v1
