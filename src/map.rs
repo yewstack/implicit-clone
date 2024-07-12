@@ -162,10 +162,10 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
     ///
     /// Computes in **O(1)** time (average).
     #[inline]
-    pub fn get<Q: ?Sized>(&self, key: &Q) -> Option<V>
+    pub fn get<Q>(&self, key: &Q) -> Option<V>
     where
         K: Borrow<Q>,
-        Q: Hash + Eq,
+        Q: Hash + Eq + ?Sized,
     {
         match self {
             Self::Static(a) => a
@@ -181,10 +181,10 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
     ///
     /// Computes in **O(1)** time (average).
     #[inline]
-    pub fn get_key_value<Q: ?Sized>(&self, key: &Q) -> Option<(K, V)>
+    pub fn get_key_value<Q>(&self, key: &Q) -> Option<(K, V)>
     where
         K: Borrow<Q>,
-        Q: Hash + Eq,
+        Q: Hash + Eq + ?Sized,
     {
         match self {
             Self::Static(a) => a.iter().find(|(k, _)| k.borrow() == key).cloned(),
@@ -194,10 +194,10 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
 
     /// Return item index, key and value
     #[inline]
-    pub fn get_full<Q: ?Sized>(&self, key: &Q) -> Option<(usize, K, V)>
+    pub fn get_full<Q>(&self, key: &Q) -> Option<(usize, K, V)>
     where
         K: Borrow<Q>,
-        Q: Hash + Eq,
+        Q: Hash + Eq + ?Sized,
     {
         match self {
             Self::Static(a) => a
@@ -225,10 +225,10 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
     ///
     /// Computes in **O(1)** time (average).
     #[inline]
-    pub fn get_index_of<Q: ?Sized>(&self, key: &Q) -> Option<usize>
+    pub fn get_index_of<Q>(&self, key: &Q) -> Option<usize>
     where
         K: Borrow<Q>,
-        Q: Hash + Eq,
+        Q: Hash + Eq + ?Sized,
     {
         match self {
             Self::Static(a) => a
@@ -243,10 +243,10 @@ impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'sta
     ///
     /// Computes in **O(1)** time (average).
     #[inline]
-    pub fn contains_key<Q: ?Sized>(&self, key: &Q) -> bool
+    pub fn contains_key<Q>(&self, key: &Q) -> bool
     where
         K: Borrow<Q>,
-        Q: Hash + Eq,
+        Q: Hash + Eq + ?Sized,
     {
         match self {
             Self::Static(a) => a.iter().any(|(k, _)| k.borrow() == key),

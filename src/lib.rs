@@ -264,6 +264,7 @@ mod test {
     #[test]
     fn custom() {
         #[derive(Clone)]
+        #[allow(dead_code)]
         struct ImplicitCloneType;
 
         impl ImplicitClone for ImplicitCloneType {}
