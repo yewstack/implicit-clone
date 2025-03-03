@@ -97,12 +97,17 @@ impl<T: ImplicitClone + 'static> From<[T; 1]> for IArray<T> {
 #[derive(Debug)]
 pub struct Iter<T: ImplicitClone + 'static> {
     array: IArray<T>,
-    index: usize,
+    left: usize,
+    right: usize,
 }
 
 impl<T: ImplicitClone + 'static> Iter<T> {
     fn new(array: IArray<T>) -> Self {
-        Self { array, index: 0 }
+        Self {
+            left: 0,
+            right: array.len(),
+            array,
+        }
     }
 }
 
@@ -110,9 +115,22 @@ impl<T: ImplicitClone + 'static> Iterator for Iter<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let item = self.array.get(self.index);
-        self.index += 1;
+        if self.left >= self.right {
+            return None;
+        }
+        let item = self.array.get(self.left);
+        self.left += 1;
         item
+    }
+}
+
+impl<T: ImplicitClone + 'static> DoubleEndedIterator for Iter<T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.left >= self.right {
+            return None;
+        }
+        self.right -= 1;
+        self.array.get(self.right)
     }
 }
 
@@ -120,19 +138,23 @@ impl<T: ImplicitClone + 'static> IArray<T> {
     /// An empty array without allocation.
     pub const EMPTY: Self = Self::Static(&[]);
 
-    /// Returns an iterator over the slice.
+    /// Returns a double-ended iterator over the array.
     ///
     /// # Examples
     ///
     /// ```
     /// # use implicit_clone::unsync::*;
-    /// let x = IArray::<u8>::Static(&[1, 2, 4]);
-    /// let mut iterator = x.iter();
+    /// let x = IArray::<u8>::Static(&[1, 2, 3, 4, 5, 6]);
+    /// let mut iter = x.iter();
     ///
-    /// assert_eq!(iterator.next(), Some(1));
-    /// assert_eq!(iterator.next(), Some(2));
-    /// assert_eq!(iterator.next(), Some(4));
-    /// assert_eq!(iterator.next(), None);
+    /// assert_eq!(Some(1), iter.next());
+    /// assert_eq!(Some(6), iter.next_back());
+    /// assert_eq!(Some(5), iter.next_back());
+    /// assert_eq!(Some(2), iter.next());
+    /// assert_eq!(Some(3), iter.next());
+    /// assert_eq!(Some(4), iter.next());
+    /// assert_eq!(None, iter.next());
+    /// assert_eq!(None, iter.next_back());
     /// ```
     #[inline]
     pub fn iter(&self) -> Iter<T> {
