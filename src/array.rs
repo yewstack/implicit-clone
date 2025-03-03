@@ -74,22 +74,26 @@ impl<T: ImplicitClone + 'static> From<&IArray<T>> for IArray<T> {
 }
 
 impl<T: ImplicitClone + 'static> IArray<T> {
-    /// Returns an iterator over the slice.
+    /// Returns a double-ended iterator over the array.
     ///
     /// # Examples
     ///
     /// ```
     /// # use implicit_clone::unsync::*;
-    /// let x = IArray::<u8>::Static(&[1, 2, 4]);
-    /// let mut iterator = x.iter();
+    /// let x = IArray::<u8>::Static(&[1, 2, 3, 4, 5, 6]);
+    /// let mut iter = x.iter();
     ///
-    /// assert_eq!(iterator.next(), Some(1));
-    /// assert_eq!(iterator.next(), Some(2));
-    /// assert_eq!(iterator.next(), Some(4));
-    /// assert_eq!(iterator.next(), None);
+    /// assert_eq!(Some(1), iter.next());
+    /// assert_eq!(Some(6), iter.next_back());
+    /// assert_eq!(Some(5), iter.next_back());
+    /// assert_eq!(Some(2), iter.next());
+    /// assert_eq!(Some(3), iter.next());
+    /// assert_eq!(Some(4), iter.next());
+    /// assert_eq!(None, iter.next());
+    /// assert_eq!(None, iter.next_back());
     /// ```
     #[inline]
-    pub fn iter(&self) -> impl Iterator<Item = T> + '_ {
+    pub fn iter(&self) -> impl DoubleEndedIterator<Item = T> + '_ {
         match self {
             Self::Static(a) => a.iter().cloned(),
             Self::Rc(a) => a.iter().cloned(),
