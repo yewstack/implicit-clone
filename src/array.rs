@@ -97,15 +97,15 @@ impl<T: ImplicitClone + 'static> From<[T; 1]> for IArray<T> {
 #[derive(Debug)]
 pub struct Iter<T: ImplicitClone + 'static> {
     array: IArray<T>,
-    index: usize,
-    len: usize,
+    left: usize,
+    right: usize,
 }
 
 impl<T: ImplicitClone + 'static> Iter<T> {
     fn new(array: IArray<T>) -> Self {
         Self {
-            index: 0,
-            len: array.len(),
+            left: 0,
+            right: array.len(),
             array,
         }
     }
@@ -115,22 +115,22 @@ impl<T: ImplicitClone + 'static> Iterator for Iter<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.index >= self.len {
+        if self.left >= self.right {
             return None;
         }
-        let item = self.array.get(self.index);
-        self.index += 1;
+        let item = self.array.get(self.left);
+        self.left += 1;
         item
     }
 }
 
 impl<T: ImplicitClone + 'static> DoubleEndedIterator for Iter<T> {
     fn next_back(&mut self) -> Option<Self::Item> {
-        if self.index >= self.len {
+        if self.left >= self.right {
             return None;
         }
-        self.len = self.len - 1;
-        let item = self.array.get(self.len);
+        self.right = self.right - 1;
+        let item = self.array.get(self.right);
         item
     }
 }
