@@ -129,7 +129,7 @@ impl<T: ImplicitClone + 'static> DoubleEndedIterator for Iter<T> {
         if self.index >= self.len {
             return None;
         }
-        self.len = self.len.saturating_sub(1);
+        self.len = self.len - 1;
         let item = self.array.get(self.len);
         item
     }
