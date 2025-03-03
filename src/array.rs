@@ -481,10 +481,10 @@ mod test_array {
     #[test]
     fn recursion() {
         #[derive(Clone)]
-        struct Node {
-            children: IArray<Node>,
+        struct _Node {
+            _children: IArray<_Node>,
         }
 
-        impl ImplicitClone for Node {}
+        impl ImplicitClone for _Node {}
     }
 }
