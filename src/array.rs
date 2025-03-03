@@ -129,9 +129,8 @@ impl<T: ImplicitClone + 'static> DoubleEndedIterator for Iter<T> {
         if self.left >= self.right {
             return None;
         }
-        self.right = self.right - 1;
-        let item = self.array.get(self.right);
-        item
+        self.right -= 1;
+        self.array.get(self.right)
     }
 }
 
