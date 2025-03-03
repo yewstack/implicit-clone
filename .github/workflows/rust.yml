@@ -2,13 +2,12 @@ name: Rust
 
 on:
   push:
-    branches: [main]
-  schedule:
-    - cron: 0 0 1 * *
+    branches: [ main ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 env:
+  CARGO_INCREMENTAL: 0
   CARGO_TERM_COLOR: always
 
 jobs:
@@ -21,42 +20,44 @@ jobs:
           - macos-latest
         rust:
           - stable
-          - 1.64.0
+          - msrv
         include:
           - os: ubuntu-latest
-            rust: stable
+            rust: msrv
             lint: 1
           - rust: stable
             rust-args: --all-features
-          - rust: 1.64.0
+          - rust: msrv
             rust-args: --all-features
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ matrix.rust }}
-          default: true
-          override: true
+      - name: Install toolchain
+        shell: bash
+        run: |
+          ver="${{ matrix.rust }}"
+          if [ "$ver" = msrv ]; then
+              ver=$(cargo metadata --format-version 1 --no-deps | \
+                  jq -r '.packages[0].rust_version')
+              extra=(-c rustfmt -c clippy)
+          fi
+          rustup toolchain install "$ver" --profile minimal --no-self-update "${extra[@]}"
+          rustup default "$ver"
+          echo "Installed:"
+          cargo --version
+          rustc --version --verbose
+
+      - uses: Swatinem/rust-cache@v2
 
       - name: cargo test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --workspace ${{ matrix.rust-args }}
+        run: cargo test --workspace ${{ matrix.rust-args }}
 
       - name: rustfmt
         if: github.event_name == 'pull_request' && matrix.lint
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+        run: cargo fmt --all -- --check
 
       - name: clippy
         if: github.event_name == 'pull_request' && matrix.lint
-        uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all --tests --all-features -- -D warnings
+        run: cargo clippy --all --tests --all-features -- -D warnings

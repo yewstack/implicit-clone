@@ -11,7 +11,7 @@ documentation = "https://docs.rs/implicit-clone"
 readme = "README.md"
 keywords = ["immutable", "cheap-clone", "copy", "rc"]
 categories = ["rust-patterns"]
-rust-version = "1.64"
+rust-version = "1.65"
 
 [package.metadata.docs.rs]
 all-features = true
