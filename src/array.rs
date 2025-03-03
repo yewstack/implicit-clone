@@ -7,6 +7,27 @@ use crate::ImplicitClone;
 ///
 /// This type is cheap to clone and thus implements [`ImplicitClone`]. It can be created based on a
 /// `&'static [T]` or based on a reference counted slice (`T`).
+///
+/// Since `IArray<T>` is an immutable data structure, direct modifications like adding or removing
+/// elements are not possible. To make changes, you need to convert it into a `Vec<T>` using
+/// `.to_vec()`, modify the vector, and then convert it back into an `IArray<T>` using
+/// `IArray::from`. Here's an example demonstrating this approach:
+///
+/// ```rust
+/// # use implicit_clone::unsync::*;
+/// let iarray = IArray::from(vec![1, 2, 3]);
+///
+/// // Convert to Vec, modify it, then convert back to IArray
+/// let mut vec = iarray.to_vec();
+/// vec.push(4);
+/// vec.retain(|&x| x != 2); // Remove the element `2`
+/// let new_iarray = IArray::from(vec);
+///
+/// assert_eq!(new_iarray, IArray::from(vec![1, 3, 4]));
+/// ```
+///
+/// This ensures that you can work with a mutable `Vec<T>` while still benefiting from
+/// `IArray<T>`'s immutable properties when needed.
 #[derive(PartialEq, Eq)]
 pub enum IArray<T: ImplicitClone + 'static> {
     /// A static slice.
