@@ -13,8 +13,6 @@ pub enum IArray<T: ImplicitClone + 'static> {
     Static(&'static [T]),
     /// A reference counted slice.
     Rc(Rc<[T]>),
-    /// A single element.
-    Single([T; 1]),
 }
 
 // TODO add insta tests
@@ -23,7 +21,6 @@ impl<T: fmt::Debug + ImplicitClone + 'static> fmt::Debug for IArray<T> {
         match self {
             Self::Static(a) => a.fmt(f),
             Self::Rc(a) => a.fmt(f),
-            Self::Single(x) => x.fmt(f),
         }
     }
 }
@@ -33,7 +30,6 @@ impl<T: ImplicitClone + 'static> Clone for IArray<T> {
         match self {
             Self::Static(a) => Self::Static(a),
             Self::Rc(a) => Self::Rc(a.clone()),
-            Self::Single(x) => Self::Single(x.clone()),
         }
     }
 }
@@ -51,7 +47,7 @@ impl<T: ImplicitClone + 'static> FromIterator<T> for IArray<T> {
             (_, Some(0)) => Self::EMPTY,
             (_, Some(1)) => {
                 if let Some(element) = it.next() {
-                    Self::Single([element])
+                    Self::from([element])
                 } else {
                     Self::EMPTY
                 }
@@ -87,9 +83,9 @@ impl<T: ImplicitClone + 'static> From<&IArray<T>> for IArray<T> {
     }
 }
 
-impl<T: ImplicitClone + 'static> From<[T; 1]> for IArray<T> {
-    fn from(a: [T; 1]) -> IArray<T> {
-        IArray::Single(a)
+impl<T: ImplicitClone + 'static, const N: usize> From<[T; N]> for IArray<T> {
+    fn from(a: [T; N]) -> IArray<T> {
+        IArray::Rc(Rc::from(a))
     }
 }
 
@@ -176,7 +172,6 @@ impl<T: ImplicitClone + 'static> IArray<T> {
         match self {
             Self::Static(a) => a.len(),
             Self::Rc(a) => a.len(),
-            Self::Single(_) => 1,
         }
     }
 
@@ -197,7 +192,6 @@ impl<T: ImplicitClone + 'static> IArray<T> {
         match self {
             Self::Static(a) => a.is_empty(),
             Self::Rc(a) => a.is_empty(),
-            Self::Single(_) => false,
         }
     }
 
@@ -218,7 +212,6 @@ impl<T: ImplicitClone + 'static> IArray<T> {
         match self {
             Self::Static(a) => a,
             Self::Rc(a) => a,
-            Self::Single(a) => a,
         }
     }
 
@@ -237,8 +230,6 @@ impl<T: ImplicitClone + 'static> IArray<T> {
         match self {
             Self::Static(a) => a.get(index).cloned(),
             Self::Rc(a) => a.get(index).cloned(),
-            Self::Single(a) if index == 0 => Some(a[0].clone()),
-            Self::Single(_) => None,
         }
     }
 
@@ -265,17 +256,12 @@ impl<T: ImplicitClone + 'static> IArray<T> {
     /// // Static references are immutable
     /// let mut v3 = IArray::<u8>::Static(&[1,2,3]);
     /// assert!(v3.get_mut().is_none());
-    ///
-    /// // Single items always return a mutable reference
-    /// let mut v4 = IArray::<u8>::Single([1]);
-    /// assert!(v4.get_mut().is_some());
     /// ```
     #[inline]
     pub fn get_mut(&mut self) -> Option<&mut [T]> {
         match self {
             Self::Rc(ref mut rc) => Rc::get_mut(rc),
             Self::Static(_) => None,
-            Self::Single(ref mut a) => Some(a),
         }
     }
 
@@ -287,8 +273,6 @@ impl<T: ImplicitClone + 'static> IArray<T> {
     ///
     /// If this array is a `Static`, it clones its elements into a new `Rc` array and returns a
     /// mutable slice into that new array.
-    ///
-    /// If this array is a `Single` element, the inner array is returned directly.
     ///
     /// # Examples
     ///
@@ -324,18 +308,6 @@ impl<T: ImplicitClone + 'static> IArray<T> {
     /// assert!(matches!(data, IArray::<u8>::Rc(_)));
     /// assert!(matches!(other_data, IArray::<u8>::Static(_)));
     /// ```
-    ///
-    /// ```
-    /// # use implicit_clone::unsync::*;
-    /// // This will use the inner array directly
-    /// let mut data = IArray::<u8>::Single([1]);
-    /// let other_data = data.clone();
-    /// data.make_mut()[0] = 123;
-    /// assert_eq!(&[123], data.as_slice());
-    /// assert_eq!(&[1], other_data.as_slice());
-    /// assert!(matches!(data, IArray::<u8>::Single(_)));
-    /// assert!(matches!(other_data, IArray::<u8>::Single(_)));
-    /// ```
     #[inline]
     pub fn make_mut(&mut self) -> &mut [T] {
         match self {
@@ -356,7 +328,6 @@ impl<T: ImplicitClone + 'static> IArray<T> {
                     _ => unreachable!(),
                 }
             }
-            Self::Single(array) => array,
         }
     }
 }
@@ -369,8 +340,6 @@ where
         match self {
             Self::Static(a) => a.eq(other),
             Self::Rc(a) => a.eq(*other),
-            Self::Single(a) if N == 1 => a[0].eq(&other[0]),
-            Self::Single(_) => false,
         }
     }
 }
@@ -383,8 +352,6 @@ where
         match self {
             Self::Static(a) => a.eq(other),
             Self::Rc(a) => a.eq(other),
-            Self::Single(a) if N == 1 => a[0].eq(&other[0]),
-            Self::Single(_) => false,
         }
     }
 }
@@ -397,7 +364,6 @@ where
         match self {
             Self::Static(a) => a.eq(&other),
             Self::Rc(a) => a.eq(other),
-            Self::Single(a) => a.eq(other),
         }
     }
 }
@@ -410,7 +376,6 @@ where
         match self {
             Self::Static(a) => a.eq(other),
             Self::Rc(a) => a.eq(*other),
-            Self::Single(a) => a.eq(*other),
         }
     }
 }
@@ -464,8 +429,6 @@ mod test_array {
     fn from_iter_is_optimized() {
         let array_0 = [].into_iter().collect::<IArray<u32>>();
         assert!(matches!(array_0, IArray::Static(_)));
-        let array_1 = [1].into_iter().collect::<IArray<u32>>();
-        assert!(matches!(array_1, IArray::Single(_)));
         let array_2 = [1, 2].into_iter().collect::<IArray<u32>>();
         assert!(matches!(array_2, IArray::Rc(_)));
         {
@@ -478,7 +441,7 @@ mod test_array {
             let it = [2].into_iter().filter(|x| x % 2 == 0);
             assert_eq!(it.size_hint(), (0, Some(1)));
             let array_0_to_1 = it.collect::<IArray<u32>>();
-            assert!(matches!(array_0_to_1, IArray::Single(_)));
+            assert!(matches!(array_0_to_1, IArray::Rc(_)));
         }
     }
 
@@ -513,5 +476,15 @@ mod test_array {
         let _array: IArray<u32> = IArray::from(vec![1, 2, 3]);
         let _array: IArray<u32> = IArray::from(Rc::from(vec![1, 2, 3]));
         let _array: IArray<u32> = IArray::from([1]);
+    }
+
+    #[test]
+    fn recursion() {
+        #[derive(Clone)]
+        struct Node {
+            children: IArray<Node>,
+        }
+
+        impl ImplicitClone for Node {}
     }
 }
