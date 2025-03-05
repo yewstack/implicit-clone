@@ -118,16 +118,6 @@ pub struct IArrayIter<'a, T: ImplicitClone + 'static> {
     right: usize,
 }
 
-impl<'a, T: ImplicitClone + 'static> IArrayIter<'a, T> {
-    fn new(array: &'a IArray<T>) -> Self {
-        Self {
-            left: 0,
-            right: array.len(),
-            array,
-        }
-    }
-}
-
 impl<'a, T: ImplicitClone + 'static> Iterator for IArrayIter<'a, T> {
     type Item = &'a T;
 
@@ -148,6 +138,50 @@ impl<'a, T: ImplicitClone + 'static> DoubleEndedIterator for IArrayIter<'a, T> {
         }
         self.right -= 1;
         Some(&self.array[self.right])
+    }
+}
+
+/// An iterator over the cloned elements of an `IArray`.
+#[derive(Debug)]
+pub struct IArrayIntoIter<T: ImplicitClone + 'static> {
+    array: IArray<T>,
+    left: usize,
+    right: usize,
+}
+
+impl<T: ImplicitClone + 'static> IntoIterator for IArray<T> {
+    type Item = T;
+    type IntoIter = IArrayIntoIter<T>;
+
+    fn into_iter(self) -> <Self as IntoIterator>::IntoIter {
+        IArrayIntoIter {
+            left: 0,
+            right: self.len(),
+            array: self,
+        }
+    }
+}
+
+impl<T: ImplicitClone + 'static> Iterator for IArrayIntoIter<T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.left >= self.right {
+            return None;
+        }
+        let item = &self.array[self.left];
+        self.left += 1;
+        Some(item.clone())
+    }
+}
+
+impl<T: ImplicitClone + 'static> DoubleEndedIterator for IArrayIntoIter<T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.left >= self.right {
+            return None;
+        }
+        self.right -= 1;
+        Some(self.array[self.right].clone())
     }
 }
 
@@ -175,7 +209,11 @@ impl<T: ImplicitClone + 'static> IArray<T> {
     /// ```
     #[inline]
     pub fn iter(&self) -> IArrayIter<T> {
-        IArrayIter::new(self)
+        IArrayIter {
+            left: 0,
+            right: self.len(),
+            array: self,
+        }
     }
 
     /// Returns the number of elements in the vector, also referred to
@@ -507,5 +545,12 @@ mod test_array {
         }
 
         impl ImplicitClone for _Node {}
+    }
+
+    #[test]
+    fn into_iter() {
+        let array = IArray::Static(&[1, 2, 3]);
+        assert_eq!(array.iter().next().unwrap(), &1);
+        assert_eq!(array.into_iter().next().unwrap(), 1);
     }
 }
