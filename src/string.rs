@@ -69,9 +69,9 @@ impl fmt::Display for IString {
     }
 }
 
-impl From<&'static str> for IString {
-    fn from(s: &'static str) -> IString {
-        IString::Static(s)
+impl From<&str> for IString {
+    fn from(s: &str) -> IString {
+        IString::Rc(Rc::from(s))
     }
 }
 
@@ -193,7 +193,7 @@ impl std::borrow::Borrow<str> for IString {
 impl FromStr for IString {
     type Err = std::convert::Infallible;
     fn from_str(value: &str) -> Result<Self, Self::Err> {
-        Ok(IString::from(String::from(value)))
+        Ok(IString::from(value))
     }
 }
 
