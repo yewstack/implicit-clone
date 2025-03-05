@@ -110,37 +110,6 @@ impl<T: ImplicitClone + 'static, const N: usize> From<[T; N]> for IArray<T> {
     }
 }
 
-/// An iterator over the elements of an `IArray`.
-#[derive(Debug)]
-pub struct IArrayIter<'a, T: ImplicitClone + 'static> {
-    array: &'a IArray<T>,
-    left: usize,
-    right: usize,
-}
-
-impl<'a, T: ImplicitClone + 'static> Iterator for IArrayIter<'a, T> {
-    type Item = &'a T;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.left >= self.right {
-            return None;
-        }
-        let item = &self.array[self.left];
-        self.left += 1;
-        Some(item)
-    }
-}
-
-impl<'a, T: ImplicitClone + 'static> DoubleEndedIterator for IArrayIter<'a, T> {
-    fn next_back(&mut self) -> Option<Self::Item> {
-        if self.left >= self.right {
-            return None;
-        }
-        self.right -= 1;
-        Some(&self.array[self.right])
-    }
-}
-
 /// An iterator over the cloned elements of an `IArray`.
 #[derive(Debug)]
 pub struct IArrayIntoIter<T: ImplicitClone + 'static> {
@@ -188,33 +157,6 @@ impl<T: ImplicitClone + 'static> DoubleEndedIterator for IArrayIntoIter<T> {
 impl<T: ImplicitClone + 'static> IArray<T> {
     /// An empty array without allocation.
     pub const EMPTY: Self = Self::Static(&[]);
-
-    /// Returns a double-ended iterator over the array.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use implicit_clone::unsync::*;
-    /// let x = IArray::<u8>::Static(&[1, 2, 3, 4, 5, 6]);
-    /// let mut iter = x.iter();
-    ///
-    /// assert_eq!(Some(&1), iter.next());
-    /// assert_eq!(Some(&6), iter.next_back());
-    /// assert_eq!(Some(&5), iter.next_back());
-    /// assert_eq!(Some(&2), iter.next());
-    /// assert_eq!(Some(&3), iter.next());
-    /// assert_eq!(Some(&4), iter.next());
-    /// assert_eq!(None, iter.next());
-    /// assert_eq!(None, iter.next_back());
-    /// ```
-    #[inline]
-    pub fn iter(&self) -> IArrayIter<T> {
-        IArrayIter {
-            left: 0,
-            right: self.len(),
-            array: self,
-        }
-    }
 
     /// Returns the number of elements in the vector, also referred to
     /// as its 'length'.
