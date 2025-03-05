@@ -110,73 +110,53 @@ impl<T: ImplicitClone + 'static, const N: usize> From<[T; N]> for IArray<T> {
     }
 }
 
-/// An iterator over the elements of an `IArray`.
+/// An iterator over the cloned elements of an `IArray`.
 #[derive(Debug)]
-pub struct Iter<T: ImplicitClone + 'static> {
+pub struct IArrayIntoIter<T: ImplicitClone + 'static> {
     array: IArray<T>,
     left: usize,
     right: usize,
 }
 
-impl<T: ImplicitClone + 'static> Iter<T> {
-    fn new(array: IArray<T>) -> Self {
-        Self {
+impl<T: ImplicitClone + 'static> IntoIterator for IArray<T> {
+    type Item = T;
+    type IntoIter = IArrayIntoIter<T>;
+
+    fn into_iter(self) -> <Self as IntoIterator>::IntoIter {
+        IArrayIntoIter {
             left: 0,
-            right: array.len(),
-            array,
+            right: self.len(),
+            array: self,
         }
     }
 }
 
-impl<T: ImplicitClone + 'static> Iterator for Iter<T> {
+impl<T: ImplicitClone + 'static> Iterator for IArrayIntoIter<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.left >= self.right {
             return None;
         }
-        let item = self.array.get(self.left);
+        let item = &self.array[self.left];
         self.left += 1;
-        item
+        Some(item.clone())
     }
 }
 
-impl<T: ImplicitClone + 'static> DoubleEndedIterator for Iter<T> {
+impl<T: ImplicitClone + 'static> DoubleEndedIterator for IArrayIntoIter<T> {
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.left >= self.right {
             return None;
         }
         self.right -= 1;
-        self.array.get(self.right)
+        Some(self.array[self.right].clone())
     }
 }
 
 impl<T: ImplicitClone + 'static> IArray<T> {
     /// An empty array without allocation.
     pub const EMPTY: Self = Self::Static(&[]);
-
-    /// Returns a double-ended iterator over the array.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use implicit_clone::unsync::*;
-    /// let x = IArray::<u8>::Static(&[1, 2, 3, 4, 5, 6]);
-    /// let mut iter = x.iter();
-    ///
-    /// assert_eq!(Some(1), iter.next());
-    /// assert_eq!(Some(6), iter.next_back());
-    /// assert_eq!(Some(5), iter.next_back());
-    /// assert_eq!(Some(2), iter.next());
-    /// assert_eq!(Some(3), iter.next());
-    /// assert_eq!(Some(4), iter.next());
-    /// assert_eq!(None, iter.next());
-    /// assert_eq!(None, iter.next_back());
-    /// ```
-    #[inline]
-    pub fn iter(&self) -> Iter<T> {
-        Iter::new(self.clone())
-    }
 
     /// Returns the number of elements in the vector, also referred to
     /// as its 'length'.
@@ -236,21 +216,21 @@ impl<T: ImplicitClone + 'static> IArray<T> {
         }
     }
 
-    /// Returns a clone of an element at a position or `None` if out of bounds.
+    /// Returns a reference of an element at a position or `None` if out of bounds.
     ///
     /// # Examples
     ///
     /// ```
     /// # use implicit_clone::unsync::*;
     /// let v = IArray::<u8>::Static(&[10, 40, 30]);
-    /// assert_eq!(Some(40), v.get(1));
+    /// assert_eq!(Some(&40), v.get(1));
     /// assert_eq!(None, v.get(3));
     /// ```
     #[inline]
-    pub fn get(&self, index: usize) -> Option<T> {
+    pub fn get(&self, index: usize) -> Option<&T> {
         match self {
-            Self::Static(a) => a.get(index).cloned(),
-            Self::Rc(a) => a.get(index).cloned(),
+            Self::Static(a) => a.get(index),
+            Self::Rc(a) => a.get(index),
         }
     }
 
@@ -507,5 +487,12 @@ mod test_array {
         }
 
         impl ImplicitClone for _Node {}
+    }
+
+    #[test]
+    fn into_iter() {
+        let array = IArray::Static(&[1, 2, 3]);
+        assert_eq!(array.iter().next().unwrap(), &1);
+        assert_eq!(array.into_iter().next().unwrap(), 1);
     }
 }

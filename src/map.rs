@@ -298,12 +298,23 @@ pub enum IMapIter<'a, K, V> {
 impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static> Iterator
     for IMapIter<'a, K, V>
 {
-    type Item = (K, V);
+    type Item = (&'a K, &'a V);
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
-            Self::Slice(it) => it.next().map(|(k, v)| (k.clone(), v.clone())),
-            Self::Map(it) => it.next().map(|(k, v)| (k.clone(), v.clone())),
+            Self::Slice(it) => it.next().map(|(k, v)| (k, v)),
+            Self::Map(it) => it.next(),
+        }
+    }
+}
+
+impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static>
+    DoubleEndedIterator for IMapIter<'a, K, V>
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        match self {
+            Self::Slice(it) => it.next_back().map(|(k, v)| (k, v)),
+            Self::Map(it) => it.next_back(),
         }
     }
 }
@@ -317,12 +328,23 @@ pub enum IMapKeys<'a, K, V> {
 impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static> Iterator
     for IMapKeys<'a, K, V>
 {
-    type Item = K;
+    type Item = &'a K;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
-            Self::Slice(it) => it.next().map(|(k, _)| k.clone()),
-            Self::Map(it) => it.next().cloned(),
+            Self::Slice(it) => it.next().map(|(k, _)| k),
+            Self::Map(it) => it.next(),
+        }
+    }
+}
+
+impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static>
+    DoubleEndedIterator for IMapKeys<'a, K, V>
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        match self {
+            Self::Slice(it) => it.next_back().map(|(k, _)| k),
+            Self::Map(it) => it.next_back(),
         }
     }
 }
@@ -336,12 +358,23 @@ pub enum IMapValues<'a, K, V> {
 impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static> Iterator
     for IMapValues<'a, K, V>
 {
-    type Item = V;
+    type Item = &'a V;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
-            Self::Slice(it) => it.next().map(|(_, v)| v.clone()),
-            Self::Map(it) => it.next().cloned(),
+            Self::Slice(it) => it.next().map(|(_, v)| v),
+            Self::Map(it) => it.next(),
+        }
+    }
+}
+
+impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static>
+    DoubleEndedIterator for IMapValues<'a, K, V>
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        match self {
+            Self::Slice(it) => it.next_back().map(|(_, v)| v),
+            Self::Map(it) => it.next_back(),
         }
     }
 }
@@ -413,12 +446,12 @@ mod test_map {
         assert_eq!(
             flattened_vec,
             [
-                (IString::from("foo1"), 1),
-                (IString::from("bar1"), 2),
-                (IString::from("baz1"), 3),
-                (IString::from("foo2"), 4),
-                (IString::from("bar2"), 5),
-                (IString::from("baz2"), 6),
+                (&IString::from("foo1"), &1),
+                (&IString::from("bar1"), &2),
+                (&IString::from("baz1"), &3),
+                (&IString::from("foo2"), &4),
+                (&IString::from("bar2"), &5),
+                (&IString::from("baz2"), &6),
             ]
         );
     }
