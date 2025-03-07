@@ -87,10 +87,10 @@ impl From<Rc<str>> for IString {
     }
 }
 
-impl From<Cow<'static, str>> for IString {
-    fn from(cow: Cow<'static, str>) -> Self {
+impl From<Cow<'_, str>> for IString {
+    fn from(cow: Cow<'_, str>) -> Self {
         match cow {
-            Cow::Borrowed(s) => IString::Static(s),
+            Cow::Borrowed(s) => s.into(),
             Cow::Owned(s) => s.into(),
         }
     }
