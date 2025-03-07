@@ -1,5 +1,7 @@
 use std::fmt;
 
+use ouroboros::self_referencing;
+
 use super::Rc;
 use crate::ImplicitClone;
 
@@ -110,24 +112,30 @@ impl<T: ImplicitClone + 'static, const N: usize> From<[T; N]> for IArray<T> {
     }
 }
 
-/// An iterator over the cloned elements of an `IArray`.
-#[derive(Debug)]
-pub struct IArrayIntoIter<T: ImplicitClone + 'static> {
+#[self_referencing]
+struct IArrayIntoIterInternal<T: ImplicitClone + 'static> {
     array: IArray<T>,
-    left: usize,
-    right: usize,
+    #[covariant]
+    #[borrows(array)]
+    iter: std::slice::Iter<'this, T>,
 }
+
+/// An iterator over the cloned elements of an `IArray`.
+#[allow(missing_debug_implementations)]
+pub struct IArrayIntoIter<T: ImplicitClone + 'static>(IArrayIntoIterInternal<T>);
 
 impl<T: ImplicitClone + 'static> IntoIterator for IArray<T> {
     type Item = T;
     type IntoIter = IArrayIntoIter<T>;
 
     fn into_iter(self) -> <Self as IntoIterator>::IntoIter {
-        IArrayIntoIter {
-            left: 0,
-            right: self.len(),
-            array: self,
-        }
+        IArrayIntoIter(
+            IArrayIntoIterInternalBuilder {
+                array: self,
+                iter_builder: |a| a.iter(),
+            }
+            .build(),
+        )
     }
 }
 
@@ -135,22 +143,13 @@ impl<T: ImplicitClone + 'static> Iterator for IArrayIntoIter<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.left >= self.right {
-            return None;
-        }
-        let item = &self.array[self.left];
-        self.left += 1;
-        Some(item.clone())
+        self.0.with_iter_mut(|iter| iter.next().cloned())
     }
 }
 
 impl<T: ImplicitClone + 'static> DoubleEndedIterator for IArrayIntoIter<T> {
     fn next_back(&mut self) -> Option<Self::Item> {
-        if self.left >= self.right {
-            return None;
-        }
-        self.right -= 1;
-        Some(self.array[self.right].clone())
+        self.0.with_iter_mut(|iter| iter.next_back().cloned())
     }
 }
 
@@ -333,7 +332,7 @@ impl<T: ImplicitClone + 'static> IArray<T> {
     }
 }
 
-impl<'a, T, U, const N: usize> PartialEq<&'a [U; N]> for IArray<T>
+impl<T, U, const N: usize> PartialEq<&[U; N]> for IArray<T>
 where
     T: PartialEq<U> + ImplicitClone,
 {
@@ -369,7 +368,7 @@ where
     }
 }
 
-impl<'a, T, U> PartialEq<&'a [U]> for IArray<T>
+impl<T, U> PartialEq<&[U]> for IArray<T>
 where
     T: PartialEq<U> + ImplicitClone,
 {
@@ -490,7 +489,7 @@ mod test_array {
     }
 
     #[test]
-    fn into_iter() {
+    fn iterators() {
         let array = IArray::Static(&[1, 2, 3]);
         assert_eq!(array.iter().next().unwrap(), &1);
         assert_eq!(array.into_iter().next().unwrap(), 1);
