@@ -308,14 +308,25 @@ impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 
     }
 }
 
-impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static>
-    DoubleEndedIterator for IMapIter<'a, K, V>
+impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static>
+    DoubleEndedIterator for IMapIter<'_, K, V>
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         match self {
             Self::Slice(it) => it.next_back().map(|(k, v)| (k, v)),
             Self::Map(it) => it.next_back(),
         }
+    }
+}
+
+impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static>
+    IntoIterator for &'a IMap<K, V>
+{
+    type Item = (K, V);
+    type IntoIter = std::iter::Map<IMapIter<'a, K, V>, fn((&'a K, &'a V)) -> (K, V)>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter().map(|(k, v)| (k.clone(), v.clone()))
     }
 }
 
@@ -338,8 +349,8 @@ impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 
     }
 }
 
-impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static>
-    DoubleEndedIterator for IMapKeys<'a, K, V>
+impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static>
+    DoubleEndedIterator for IMapKeys<'_, K, V>
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         match self {
@@ -368,8 +379,8 @@ impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 
     }
 }
 
-impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static>
-    DoubleEndedIterator for IMapValues<'a, K, V>
+impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static>
+    DoubleEndedIterator for IMapValues<'_, K, V>
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         match self {
@@ -471,5 +482,14 @@ mod test_map {
     fn from() {
         let x: IMap<u32, u32> = IMap::Static(&[]);
         let _out = IMap::from(&x);
+    }
+
+    #[test]
+    fn iterators() {
+        let map = IMap::Static(&[(1, 10), (2, 20), (3, 30)]);
+        assert_eq!(map.iter().next().unwrap(), (&1, &10));
+        assert_eq!(map.keys().next().unwrap(), &1);
+        assert_eq!(map.values().next().unwrap(), &10);
+        assert_eq!(map.into_iter().next().unwrap(), (1, 10));
     }
 }
