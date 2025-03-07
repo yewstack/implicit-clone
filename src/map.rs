@@ -2,6 +2,7 @@ use indexmap::map::Iter as MapIter;
 use indexmap::map::Keys as MapKeys;
 use indexmap::map::Values as MapValues;
 use indexmap::IndexMap as Map;
+use ouroboros::self_referencing;
 use std::borrow::Borrow;
 use std::fmt;
 use std::hash::Hash;
@@ -308,14 +309,59 @@ impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 
     }
 }
 
-impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static>
-    DoubleEndedIterator for IMapIter<'a, K, V>
+impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static>
+    DoubleEndedIterator for IMapIter<'_, K, V>
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         match self {
             Self::Slice(it) => it.next_back().map(|(k, v)| (k, v)),
             Self::Map(it) => it.next_back(),
         }
+    }
+}
+
+#[self_referencing]
+struct IMapIntoIterInternal<
+    K: Eq + Hash + ImplicitClone + 'static,
+    V: PartialEq + ImplicitClone + 'static,
+> {
+    map: IMap<K, V>,
+    #[covariant]
+    #[borrows(map)]
+    iter: IMapIter<'this, K, V>,
+}
+
+#[allow(missing_docs, missing_debug_implementations)]
+pub struct IMapIntoIter<
+    K: Eq + Hash + ImplicitClone + 'static,
+    V: PartialEq + ImplicitClone + 'static,
+>(IMapIntoIterInternal<K, V>);
+
+impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static> IntoIterator
+    for IMap<K, V>
+{
+    type Item = (K, V);
+    type IntoIter = IMapIntoIter<K, V>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        IMapIntoIter(
+            IMapIntoIterInternalBuilder {
+                map: self,
+                iter_builder: |a| a.iter(),
+            }
+            .build(),
+        )
+    }
+}
+
+impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static> Iterator
+    for IMapIntoIter<K, V>
+{
+    type Item = (K, V);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0
+            .with_iter_mut(|iter| iter.next().map(|(k, v)| (k.clone(), v.clone())))
     }
 }
 
@@ -338,8 +384,8 @@ impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 
     }
 }
 
-impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static>
-    DoubleEndedIterator for IMapKeys<'a, K, V>
+impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static>
+    DoubleEndedIterator for IMapKeys<'_, K, V>
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         match self {
@@ -368,8 +414,8 @@ impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 
     }
 }
 
-impl<'a, K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static>
-    DoubleEndedIterator for IMapValues<'a, K, V>
+impl<K: Eq + Hash + ImplicitClone + 'static, V: PartialEq + ImplicitClone + 'static>
+    DoubleEndedIterator for IMapValues<'_, K, V>
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         match self {
