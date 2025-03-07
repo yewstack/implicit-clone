@@ -518,4 +518,13 @@ mod test_map {
         let x: IMap<u32, u32> = IMap::Static(&[]);
         let _out = IMap::from(&x);
     }
+
+    #[test]
+    fn iterators() {
+        let map = IMap::Static(&[(1, 10), (2, 20), (3, 30)]);
+        assert_eq!(map.iter().next().unwrap(), (&1, &10));
+        assert_eq!(map.keys().next().unwrap(), &1);
+        assert_eq!(map.values().next().unwrap(), &10);
+        assert_eq!(map.into_iter().next().unwrap(), (1, 10));
+    }
 }

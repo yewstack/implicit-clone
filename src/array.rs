@@ -489,7 +489,7 @@ mod test_array {
     }
 
     #[test]
-    fn into_iter() {
+    fn iterators() {
         let array = IArray::Static(&[1, 2, 3]);
         assert_eq!(array.iter().next().unwrap(), &1);
         assert_eq!(array.into_iter().next().unwrap(), 1);
