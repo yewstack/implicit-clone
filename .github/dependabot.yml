@@ -10,3 +10,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    ignore:
+      # stay on rust msrv
+      - dependency-name: "trybuild"
+      - dependency-name: "once_cell"
