@@ -27,6 +27,7 @@ derive = ["implicit-clone-derive"]
 implicit-clone-derive = { version = "0.1", optional = true, path = "./implicit-clone-derive" }
 indexmap = { version = "2", optional = true }
 serde = { version = "1", optional = true }
+ouroboros = "0.18"
 
 [dev-dependencies]
 static_assertions = "1"
