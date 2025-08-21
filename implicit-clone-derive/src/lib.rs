@@ -15,8 +15,7 @@ pub fn derive_implicit_clone(item: proc_macro::TokenStream) -> proc_macro::Token
                 ident,
                 colon_token: _,
                 bounds,
-                eq_token,
-                default,
+                ..
             }) => {
                 let bounds = bounds
                     .iter()
@@ -24,7 +23,7 @@ pub fn derive_implicit_clone(item: proc_macro::TokenStream) -> proc_macro::Token
                     .chain(std::iter::once(quote! { ::implicit_clone::ImplicitClone }))
                     .collect::<Vec<_>>();
                 quote! {
-                    #(#attrs)* #ident: #(#bounds)+* #eq_token #default
+                    #(#attrs)* #ident: #(#bounds)+*
                 }
             }
             _ => quote! { #param },
